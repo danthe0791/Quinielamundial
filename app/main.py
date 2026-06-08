@@ -202,12 +202,16 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     matches_query = db.query(Match).order_by(Match.group_order, Match.match_date_utc)
 
     if show_today:
-        # Filter matches happening today (UTC date)
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
+        # Filter matches happening today in CST (UTC-6)
+        # Today CST = from 06:00 UTC today to 06:00 UTC tomorrow
+        utc_now = datetime.utcnow()
+        today_start_cst = utc_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        # Shift: CST midnight = 06:00 UTC same day
+        today_start_utc = today_start_cst + timedelta(hours=6)
+        today_end_utc = today_start_utc + timedelta(days=1)
         matches_query = matches_query.filter(
-            Match.match_date_utc >= today_start,
-            Match.match_date_utc < today_end,
+            Match.match_date_utc >= today_start_utc,
+            Match.match_date_utc < today_end_utc,
         )
     elif group_order:
         matches_query = matches_query.filter(Match.group_order == int(group_order))
