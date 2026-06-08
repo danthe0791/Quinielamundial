@@ -1,7 +1,7 @@
 import hashlib
 import secrets
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from typing import Optional
 
 from fastapi import FastAPI, Request, Form, Depends
@@ -328,11 +328,14 @@ def daily_results_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
 
     closures = db.query(DailyClosure).order_by(DailyClosure.closure_date.desc()).all()
-    standings = get_user_standings(db)
+    standings_global = get_user_standings(db)
+    standings_today = get_user_standings(db, scored_on=date.today())
     today_closed = any(c.closure_date == datetime.utcnow().date() for c in closures)
 
     return templates.TemplateResponse("daily_results.html", {
-        "request": request, "user": user, "standings": standings,
+        "request": request, "user": user,
+        "standings_global": standings_global,
+        "standings_today": standings_today,
         "closures": closures, "today_closed": today_closed,
     })
 

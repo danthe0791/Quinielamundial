@@ -860,6 +860,40 @@ body {
 }
 
 /* ========================================
+   Daily Results Page
+   ======================================== */
+
+.daily-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 20px;
+}
+
+.daily-tables {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.daily-table-block h2 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.daily-table-block .standings-subtitle {
+    color: var(--gray-400);
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+    .daily-tables {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
    Admin Page
    ======================================== */
 

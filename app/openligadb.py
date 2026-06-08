@@ -14,6 +14,33 @@ LEAGUES = [
 ]
 BASE_URL = "https://api.openligadb.de"
 
+# ─── Translation: German → Spanish ───────────────────────
+TRANSLATIONS = {
+    "Mexiko": "México", "Südafrika": "Sudáfrica", "Südkorea": "Corea del Sur",
+    "Tschechien": "Rep. Checa", "Kanada": "Canadá", "USA": "EE. UU.",
+    "Bosnien und Herzegowina": "Bosnia", "Bosnien-Herzegowina": "Bosnia",
+    "Paraguay": "Paraguay", "Australien": "Australia", "Türkei": "Turquía",
+    "Katar": "Catar", "Schweiz": "Suiza", "Brasilien": "Brasil",
+    "Marokko": "Marruecos", "Haiti": "Haití", "Schottland": "Escocia",
+    "Deutschland": "Alemania", "Curaçao": "Curazao",
+    "Niederlande": "Países Bajos", "Japan": "Japón",
+    "Elfenbeinküste": "Costa de Marfil", "Ecuador": "Ecuador",
+    "Schweden": "Suecia", "Tunesien": "Túnez", "Spanien": "España",
+    "Kap Verde": "Cabo Verde", "Belgien": "Bélgica", "Ägypten": "Egipto",
+    "Saudi-Arabien": "Arabia Saudita", "Uruguay": "Uruguay", "Iran": "Irán",
+    "Neuseeland": "Nueva Zelanda", "Österreich": "Austria",
+    "Jordanien": "Jordania", "Frankreich": "Francia", "Senegal": "Senegal",
+    "Irak": "Irak", "Norwegen": "Noruega", "Argentinien": "Argentina",
+    "Algerien": "Argelia", "Portugal": "Portugal", "DR Kongo": "RD Congo",
+    "England": "Inglaterra", "Kroatien": "Croacia", "Ghana": "Ghana",
+    "Panama": "Panamá", "Usbekistan": "Uzbekistán", "Kolumbien": "Colombia",
+    "Venezuela": "Venezuela", "Griechenland": "Grecia",
+    "Italien": "Italia", "Dänemark": "Dinamarca", "Luxemburg": "Luxemburgo",
+}
+
+def translate(name: str) -> str:
+    return TRANSLATIONS.get(name, name)
+
 
 async def fetch_all_matches() -> list[dict]:
     """Fetch all matches for all configured leagues."""
@@ -110,10 +137,10 @@ async def sync_matches_from_api(db: Session) -> int:
 
         match_data = {
             "openligadb_match_id": match_id,
-            "home_team": team1.get("teamName", "Unknown"),
-            "away_team": team2.get("teamName", "Unknown"),
-            "home_short": team1.get("shortName", ""),
-            "away_short": team2.get("shortName", ""),
+            "home_team": translate(team1.get("teamName", "Unknown")),
+            "away_team": translate(team2.get("teamName", "Unknown")),
+            "home_short": translate(team1.get("shortName", "")),
+            "away_short": translate(team2.get("shortName", "")),
             "home_icon": team1.get("teamIconUrl", ""),
             "away_icon": team2.get("teamIconUrl", ""),
             "match_date": match_date,

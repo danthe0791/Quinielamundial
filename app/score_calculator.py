@@ -87,34 +87,46 @@ def recalculate_all_bets(db: Session):
         match = next((m for m in finished_matches if m.id == bet.match_id), None)
         if match:
             pts = calculate_bet_points(match, bet)
+            new_total = pts["points_total"]
+            # Only set scored_on if points changed (newly awarded)
+            if new_total != (bet.points_total or 0) and new_total > 0 and bet.scored_on is None:
+                bet.scored_on = date.today()
             bet.points_result = pts["points_result"]
             bet.points_score = pts["points_score"]
             bet.points_cards = pts["points_cards"]
             bet.points_corners = pts["points_corners"]
-            bet.points_total = pts["points_total"]
+            bet.points_total = new_total
 
     db.commit()
 
 
-def get_user_standings(db: Session) -> list[dict]:
-    """Get standings for all users sorted by total points."""
+def get_user_standings(db: Session, scored_on: Optional[date] = None) -> list[dict]:
+    """Get standings for all users sorted by total points.
+    If scored_on is provided, only count points scored on that date (daily table).
+    Otherwise, count all points (global table).
+    """
     recalculate_all_bets(db)
 
     users = db.query(User).order_by(User.id).all()
     standings = []
 
     for user in users:
+        if scored_on:
+            bets = [b for b in user.bets if b.scored_on == scored_on]
+        else:
+            bets = [b for b in user.bets]
+
         total_points = sum(
             (bet.points_result or 0) + (bet.points_score or 0) +
             (bet.points_cards or 0) + (bet.points_corners or 0)
-            for bet in user.bets
+            for bet in bets if bet.match.is_finished
         )
 
-        exact_scores = sum(1 for bet in user.bets if bet.points_score > 0)
-        correct_results = sum(1 for bet in user.bets if bet.points_result > 0)
-        correct_cards = sum(1 for bet in user.bets if bet.points_cards > 0)
-        correct_corners = sum(1 for bet in user.bets if bet.points_corners > 0)
-        total_bets = sum(1 for bet in user.bets if bet.match.is_finished)
+        exact_scores = sum(1 for bet in bets if bet.points_score > 0 and bet.match.is_finished)
+        correct_results = sum(1 for bet in bets if bet.points_result > 0 and bet.match.is_finished)
+        correct_cards = sum(1 for bet in bets if bet.points_cards > 0 and bet.match.is_finished)
+        correct_corners = sum(1 for bet in bets if bet.points_corners > 0 and bet.match.is_finished)
+        total_bets = sum(1 for bet in bets if bet.match.is_finished)
 
         standings.append({
             "user_id": user.id,

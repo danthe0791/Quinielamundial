@@ -2,89 +2,107 @@
 {% block title %}Cierres Diarios{% endblock %}
 
 {% block content %}
-<div class="standings-page">
+<div class="daily-page">
     <div class="standings-header">
-        <h1>📅 Cierres Diarios</h1>
-        <p class="standings-subtitle">Resultados acumulativos - la tabla general se actualiza automáticamente</p>
+        <h1>📅 Resultados y Cierres</h1>
     </div>
 
-    <div class="standings-container">
-        {% if standings %}
-        <div class="standings-table-wrapper">
-            <table class="standings-table">
-                <thead>
-                    <tr>
-                        <th class="col-rank">#</th>
-                        <th class="col-name">Participante</th>
-                        <th class="col-points">Puntos</th>
-                        <th class="col-results">Aciertos</th>
-                        <th class="col-exact">Exactos</th>
-                        <th class="col-exact">Tarjetas</th>
-                        <th class="col-exact">Corners</th>
-                        <th class="col-bets">Pronósticos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for s in standings %}
-                    <tr class="{% if s.user_id == user.id %}current-user{% endif %}">
-                        <td class="col-rank">
-                            {% if s.rank == 1 %}🥇
-                            {% elif s.rank == 2 %}🥈
-                            {% elif s.rank == 3 %}🥉
-                            {% else %}{{ s.rank }}{% endif %}
-                        </td>
-                        <td class="col-name">
-                            <span class="participant-name">{{ s.username }}</span>
-                            {% if s.user_id == user.id %}<span class="you-badge">Tú</span>{% endif %}
-                        </td>
-                        <td class="col-points"><strong>{{ s.total_points }}</strong></td>
-                        <td class="col-results">{{ s.correct_results }}</td>
-                        <td class="col-exact">{{ s.exact_scores }}</td>
-                        <td class="col-exact">{{ s.correct_cards }}</td>
-                        <td class="col-exact">{{ s.correct_corners }}</td>
-                        <td class="col-bets">{{ s.total_bets }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
-
-        <!-- Daily closures history -->
-        <div class="scoring-info">
-            <h3>📋 Historial de Cierres</h3>
-            {% if closures %}
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Partidos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in closures %}
-                    <tr>
-                        <td>{{ c.closure_date.strftime('%d/%m/%Y') }}</td>
-                        <td>{{ c.matches_count }} finalizados</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="empty-state" style="padding:20px">Aún no hay cierres. El admin puede cerrar el día desde el panel de administración.</p>
-            {% endif %}
+    <!-- Two tables side by side -->
+    <div class="daily-tables">
+        <!-- Global accumulated table -->
+        <div class="daily-table-block">
+            <h2>🏆 Tabla Global Acumulada</h2>
+            <p class="standings-subtitle">Todos los puntos acumulados desde el inicio</p>
+            {% if standings_global %}
+            <div class="standings-table-wrapper">
+                <table class="standings-table">
+                    <thead><tr>
+                        <th class="col-rank">#</th><th class="col-name">Participante</th>
+                        <th class="col-points">Pts</th><th class="col-results">Ac</th>
+                        <th class="col-exact">Ex</th><th class="col-exact">🟨</th>
+                        <th class="col-exact">🚩</th><th class="col-bets">Pr</th>
+                    </tr></thead>
+                    <tbody>
+                        {% for s in standings_global %}
+                        <tr class="{% if s.user_id == user.id %}current-user{% endif %}">
+                            <td class="col-rank">{{ s.rank }}</td>
+                            <td class="col-name">{{ s.username }}{% if s.user_id == user.id %}<span class="you-badge">Tú</span>{% endif %}</td>
+                            <td class="col-points"><strong>{{ s.total_points }}</strong></td>
+                            <td class="col-results">{{ s.correct_results }}</td>
+                            <td class="col-exact">{{ s.exact_scores }}</td>
+                            <td class="col-exact">{{ s.correct_cards }}</td>
+                            <td class="col-exact">{{ s.correct_corners }}</td>
+                            <td class="col-bets">{{ s.total_bets }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="empty-state">Sin datos</p>{% endif %}
         </div>
 
-        <div class="scoring-info">
-            <h3>📋 Sistema de Puntuación</h3>
-            <ul>
-                <li><strong>Resultado correcto</strong> (quién gana o empate): <span class="points-example">2 puntos</span></li>
-                <li><strong>Marcador exacto</strong>: <span class="points-example">+3 puntos adicionales</span></li>
-                <li><strong>Tarjetas</strong> (Over/Under): <span class="points-example">1 punto</span></li>
-                <li><strong>Corners</strong> (Over/Under): <span class="points-example">1 punto</span></li>
-                <li>Total posible por partido: <span class="points-example">hasta 7 puntos</span></li>
-            </ul>
+        <!-- Today's table -->
+        <div class="daily-table-block">
+            <h2>📅 Puntos de Hoy</h2>
+            <p class="standings-subtitle">Solo puntos ganados en la fecha actual</p>
+            {% if standings_today %}
+            <div class="standings-table-wrapper">
+                <table class="standings-table">
+                    <thead><tr>
+                        <th class="col-rank">#</th><th class="col-name">Participante</th>
+                        <th class="col-points">Pts</th><th class="col-results">Ac</th>
+                        <th class="col-exact">Ex</th><th class="col-exact">🟨</th>
+                        <th class="col-exact">🚩</th><th class="col-bets">Pr</th>
+                    </tr></thead>
+                    <tbody>
+                        {% for s in standings_today %}
+                        <tr class="{% if s.user_id == user.id %}current-user{% endif %}">
+                            <td class="col-rank">{{ s.rank }}</td>
+                            <td class="col-name">{{ s.username }}{% if s.user_id == user.id %}<span class="you-badge">Tú</span>{% endif %}</td>
+                            <td class="col-points"><strong>{{ s.total_points }}</strong></td>
+                            <td class="col-results">{{ s.correct_results }}</td>
+                            <td class="col-exact">{{ s.exact_scores }}</td>
+                            <td class="col-exact">{{ s.correct_cards }}</td>
+                            <td class="col-exact">{{ s.correct_corners }}</td>
+                            <td class="col-bets">{{ s.total_bets }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="empty-state">Aún no hay puntos registrados hoy</p>{% endif %}
         </div>
+    </div>
+
+    <!-- Closures history -->
+    <div class="scoring-info">
+        <h3>📋 Historial de Cierres</h3>
+        {% if closures %}
+        <table class="users-table">
+            <thead><tr><th>Fecha</th><th>Partidos</th></tr></thead>
+            <tbody>
+                {% for c in closures %}
+                <tr><td>{{ c.closure_date.strftime('%d/%m/%Y') }}</td><td>{{ c.matches_count }} finalizados</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}<p class="empty-state" style="padding:20px">Aún no hay cierres</p>{% endif %}
+    </div>
+
+    <!-- Scoring explanation -->
+    <div class="scoring-info">
+        <h3>📋 ¿Cómo se calculan los puntos?</h3>
+        <table class="users-table">
+            <thead><tr><th>Columna</th><th>Significado</th><th>Puntos</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Ac</strong> (Aciertos)</td><td>Acertaste quién ganó o si fue empate</td><td>2 pts c/u</td></tr>
+                <tr><td><strong>Ex</strong> (Exactos)</td><td>Acertaste el marcador exacto</td><td>3 pts c/u (adicional)</td></tr>
+                <tr><td><strong>🟨</strong> (Tarjetas)</td><td>Acertaste Over/Under de tarjetas totales</td><td>1 pt c/u</td></tr>
+                <tr><td><strong>🚩</strong> (Corners)</td><td>Acertaste Over/Under de corners totales</td><td>1 pt c/u</td></tr>
+                <tr><td><strong>Pr</strong> (Pronósticos)</td><td>Total de partidos en los que apostaste (ya finalizados)</td><td>-</td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:12px"><strong>Total posible por partido:</strong> hasta 7 puntos</p>
     </div>
 </div>
 {% endblock %}

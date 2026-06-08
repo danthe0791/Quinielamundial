@@ -64,6 +64,7 @@ class Bet(Base):
     points_cards = Column(Integer, default=0)
     points_corners = Column(Integer, default=0)
     points_total = Column(Integer, default=0)
+    scored_on = Column(Date, nullable=True)     # Date when points were awarded
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
