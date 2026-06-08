@@ -88,20 +88,38 @@ def get_match_result(match_data: dict) -> tuple[Optional[int], Optional[int]]:
 
 
 def map_group_to_stage(group_name: str) -> str:
-    """Map group name to tournament stage."""
-    group_name = (group_name or "").lower()
-    if "finale" in group_name:
+    """Map group name to tournament stage (Spanish)."""
+    gn = (group_name or "").lower()
+    if "finale" in gn:
         return "Final"
-    elif "halbfinale" in group_name:
+    elif "halbfinale" in gn:
         return "Semifinal"
-    elif "viertelfinale" in group_name:
+    elif "viertelfinale" in gn:
         return "Cuartos"
-    elif "achtelfinale" in group_name:
+    elif "achtelfinale" in gn:
         return "Octavos"
-    elif "sechzehntelfinale" in group_name:
+    elif "sechzehntelfinale" in gn:
         return "Dieciseisavos"
-    else:
+    elif "gruppe" in gn or "spieltag" in gn or "runde" in gn:
         return "Grupos"
+    return "Grupos"
+
+
+def translate_group_name(name: str) -> str:
+    """Translate group name to Spanish."""
+    gn = (name or "")
+    if "Gruppenphase" in gn:
+        return gn.replace("Gruppenphase", "Fase de Grupos")
+    if "1. Runde" in gn:
+        return gn.replace("1. Runde", "Fase 1")
+    if "2. Runde" in gn:
+        return gn.replace("2. Runde", "Fase 2")
+    if "3. Runde" in gn:
+        return gn.replace("3. Runde", "Fase 3")
+    if "Spieltag" in gn:
+        parts = gn.split(".")
+        return f"Jornada {parts[0].strip()}" if len(parts) > 1 else gn
+    return gn
 
 
 async def sync_matches_from_api(db: Session) -> int:
@@ -145,7 +163,7 @@ async def sync_matches_from_api(db: Session) -> int:
             "away_icon": team2.get("teamIconUrl", ""),
             "match_date": match_date,
             "match_date_utc": match_date_utc,
-            "group_name": group_name,
+            "group_name": translate_group_name(group_name),
             "group_order": group_order,
             "stage": map_group_to_stage(group_name),
             "home_score": home_score,
@@ -171,3 +189,16 @@ async def sync_matches_from_api(db: Session) -> int:
 
     db.commit()
     return count
+
+
+async def fetch_group_standings() -> list[dict]:
+    """Fetch group standings from OpenLigaDB."""
+    url = f"{BASE_URL}/getgrouptable/wm26/2026"
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Error fetching standings: {e}")
+            return []

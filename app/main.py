@@ -13,7 +13,7 @@ import os
 
 from .database import init_db, get_db, SessionLocal
 from .models import User, Match, Bet, DailyClosure, AppSettings
-from .openligadb import sync_matches_from_api
+from .openligadb import sync_matches_from_api, fetch_group_standings
 from .score_calculator import (
     calculate_bet_points,
     recalculate_all_bets,
@@ -50,6 +50,7 @@ templates = Jinja2Templates(directory=templates_dir)
 templates.env.globals["now"] = lambda: datetime.utcnow()
 templates.env.globals["utc_to_cst"] = utc_to_cst
 templates.env.globals["format_cst"] = format_cst
+templates.env.globals["timedelta"] = timedelta
 
 sessions: dict[str, dict] = {}
 SESSION_EXPIRE_HOURS = 24
@@ -240,14 +241,19 @@ def place_bet(
     if not match:
         return JSONResponse({"error": "Partido no encontrado"}, status_code=404)
 
-    if match.match_date_utc and datetime.utcnow() > match.match_date_utc:
-        return JSONResponse({"error": "El partido ya comenzó, no puedes modificar tu apuesta"}, status_code=400)
+    # Block 15 min before match starts
+    if match.match_date_utc and datetime.utcnow() > (match.match_date_utc - timedelta(minutes=15)):
+        return JSONResponse({"error": "El partido está por comenzar o ya inició. No puedes modificar tu apuesta."}, status_code=400)
 
     if match.is_finished:
         return JSONResponse({"error": "El partido ya finalizó"}, status_code=400)
 
     if home_score < 0 or away_score < 0 or home_score > 99 or away_score > 99:
         return JSONResponse({"error": "Marcador inválido"}, status_code=400)
+
+    # Cards and corners required
+    if cards_over is None or cards_over == "" or corners_over is None or corners_over == "":
+        return JSONResponse({"error": "Tarjetas y corners son obligatorios. Seleccioná Over o Under."}, status_code=400)
 
     def parse_bool(v):
         if v is None or v == "":
@@ -363,6 +369,20 @@ def standings_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
     standings = get_user_standings(db)
     return templates.TemplateResponse("standings.html", {"request": request, "user": user, "standings": standings})
+
+
+@app.get("/group-standings", response_class=HTMLResponse)
+async def group_standings_page(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    try:
+        groups = await fetch_group_standings()
+    except Exception:
+        groups = []
+    return templates.TemplateResponse("group_standings.html", {
+        "request": request, "user": user, "groups": groups,
+    })
 
 @app.get("/api/standings")
 def api_standings(db: Session = Depends(get_db)):

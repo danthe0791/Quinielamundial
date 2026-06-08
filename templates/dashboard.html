@@ -59,7 +59,7 @@
 
         {% set bet = bets.get(match.id) %}
         {% set match_bets = all_bets.get(match.id, []) %}
-        {% set match_started = match.match_date_utc and match.match_date_utc < now() %}
+        {% set match_started = match.match_date_utc and (match.match_date_utc - timedelta(minutes=15)) < now() %}
         
         <div class="match-card {% if match.is_finished %}finished{% endif %}" id="match-{{ match.id }}">
             <div class="match-info">
@@ -371,8 +371,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Auto-refresh every 30 seconds
+// Auto-refresh every 30 seconds (no page reload, no modal interference)
 setInterval(async function() {
+    // Don't do anything if a modal is open
+    if (document.querySelector('.modal.show')) return;
+
     try {
         const resp = await fetch('/api/live-matches');
         if (!resp.ok) return;
@@ -386,7 +389,7 @@ setInterval(async function() {
             syncEl.style.color = 'var(--secondary)';
         }
 
-        // Update match cards
+        // Update match cards without reloading
         (data.matches || data).forEach(m => {
             const card = document.getElementById('match-' + m.id);
             if (!card) return;
@@ -397,11 +400,22 @@ setInterval(async function() {
                 statusEl.textContent = 'Finalizado';
                 statusEl.className = 'match-status finished-label';
                 card.classList.add('finished');
-                // Reload page to show updated scores
-                setTimeout(() => location.reload(), 2000);
+                // Disable all inputs and buttons
+                card.querySelectorAll('.score-input').forEach(i => i.disabled = true);
+                card.querySelectorAll('.btn-bet').forEach(b => { b.disabled = true; b.textContent = 'Finalizado'; });
+                // Show actual score if available
+                const scoreArea = card.querySelector('.score-area');
+                if (scoreArea && m.home_score !== null && !scoreArea.querySelector('.actual-score')) {
+                    const div = document.createElement('div');
+                    div.className = 'actual-score';
+                    div.innerHTML = `<span class=\"score-home\">${m.home_score}</span><span class=\"score-separator\">-</span><span class=\"score-away\">${m.away_score}</span>`;
+                    scoreArea.insertBefore(div, scoreArea.firstChild);
+                }
             } else if (m.match_date_utc && new Date(m.match_date_utc) < new Date() && prevStatus !== 'En vivo' && !m.is_finished) {
                 statusEl.textContent = 'En vivo';
                 statusEl.className = 'match-status live-label';
+                card.querySelectorAll('.score-input').forEach(i => i.disabled = true);
+                card.querySelectorAll('.btn-bet').forEach(b => { b.disabled = true; b.textContent = 'En juego'; });
             }
         });
     } catch(e) {}

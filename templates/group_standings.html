@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Posiciones de Grupos{% endblock %}
+
+{% block content %}
+<div class="standings-page">
+    <div class="standings-header">
+        <h1>🌍 Tabla de Posiciones - Grupos</h1>
+        <p class="standings-subtitle">Datos en tiempo real desde OpenLigaDB</p>
+    </div>
+
+    {% for group in groups %}
+    <div class="scoring-info" style="margin-bottom:24px">
+        <h3>Grupo {{ group.groupName or '' }}</h3>
+        {% if group.teamTable %}
+        <div class="standings-table-wrapper">
+            <table class="standings-table">
+                <thead><tr>
+                    <th class="col-rank">#</th>
+                    <th class="col-name">Equipo</th>
+                    <th class="col-points">Pts</th>
+                    <th class="col-results">PJ</th>
+                    <th class="col-exact">PG</th>
+                    <th class="col-exact">PE</th>
+                    <th class="col-exact">PP</th>
+                    <th class="col-exact">GF</th>
+                    <th class="col-exact">GC</th>
+                    <th class="col-exact">DG</th>
+                </tr></thead>
+                <tbody>
+                    {% for row in group.teamTable %}
+                    <tr>
+                        <td class="col-rank">{{ row.rank }}</td>
+                        <td class="col-name">
+                            {% if row.teamIconUrl %}
+                            <img src="{{ row.teamIconUrl }}" style="width:20px;height:14px;vertical-align:middle;margin-right:6px" onerror="this.style.display='none'">
+                            {% endif %}
+                            <strong>{{ row.teamName }}</strong>
+                        </td>
+                        <td class="col-points"><strong>{{ row.points }}</strong></td>
+                        <td class="col-results">{{ row.matches }}</td>
+                        <td class="col-exact">{{ row.won }}</td>
+                        <td class="col-exact">{{ row.draw }}</td>
+                        <td class="col-exact">{{ row.lost }}</td>
+                        <td class="col-exact">{{ row.goals }}</td>
+                        <td class="col-exact">{{ row.opponentGoals }}</td>
+                        <td class="col-exact">{{ row.goalDiff }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state" style="padding:16px">Sin datos aún</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No hay datos de grupos disponibles</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
