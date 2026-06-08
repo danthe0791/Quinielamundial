@@ -107,6 +107,17 @@ async def on_startup():
     init_db()
     try:
         db = SessionLocal()
+
+        # Create default admin if no users exist
+        if db.query(User).count() == 0:
+            db.add(User(
+                username="admin", display_name="Admin",
+                password_hash=hash_password("admin123"),
+                is_admin=True,
+            ))
+            db.commit()
+            print("[Startup] Admin creado: admin / admin123")
+
         await sync_matches_from_api(db)
         recalculate_all_bets(db)
         if not db.query(AppSettings).filter(AppSettings.key == "min_participants").first():
@@ -451,6 +462,70 @@ def admin_update_match(
     db.commit()
 
     return JSONResponse({"success": True, "message": "Estadísticas actualizadas"})
+
+
+# ─── Partidos Amistosos (futuros, para pruebas) ─────────
+FUTURE_FRIENDLIES = [
+    {"home": "España", "away": "Perú", "day_offset": 0, "hour": 22, "minute": 0},
+    {"home": "Brasil", "away": "Argentina", "day_offset": 0, "hour": 23, "minute": 0},
+    {"home": "Alemania", "away": "Francia", "day_offset": 0, "hour": 23, "minute": 30},
+    {"home": "Inglaterra", "away": "Italia", "day_offset": 1, "hour": 3, "minute": 0},
+    {"home": "Países Bajos", "away": "Portugal", "day_offset": 1, "hour": 5, "minute": 0},
+    {"home": "Uruguay", "away": "Colombia", "day_offset": 1, "hour": 9, "minute": 0},
+]
+
+@app.post("/admin/seed-friendlies")
+def admin_seed_friendlies(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user or not user.is_admin:
+        return JSONResponse({"error": "No autorizado"}, status_code=401)
+
+    base = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    created = 0
+
+    for fm in FUTURE_FRIENDLIES:
+        dt = base + timedelta(days=fm["day_offset"], hours=fm["hour"], minutes=fm["minute"])
+        exists = db.query(Match).filter(
+            Match.home_team == fm["home"], Match.away_team == fm["away"]
+        ).first()
+        if exists:
+            continue
+
+        db.add(Match(
+            openligadb_match_id=None, home_team=fm["home"], away_team=fm["away"],
+            home_short=fm["home"][:3].upper(), away_short=fm["away"][:3].upper(),
+            match_date=dt, match_date_utc=dt,
+            group_name="Amistosos", group_order=99, stage="Amistoso",
+            cards_line=3.5, corners_line=7.5,
+            is_friendly=True, is_finished=False, last_updated=datetime.utcnow(),
+        ))
+        created += 1
+
+    db.commit()
+    return JSONResponse({"success": True, "count": created,
+                         "message": f"{created} amistosos creados para probar" if created else "Ya existen"})
+
+
+# ─── Reset All Data ─────────────────────────────────────
+@app.post("/admin/reset-all")
+def admin_reset_all(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user or not user.is_admin:
+        return JSONResponse({"error": "No autorizado"}, status_code=401)
+    
+    try:
+        # Delete all bets, matches, closures
+        db.query(Bet).delete()
+        db.query(Match).delete()
+        db.query(DailyClosure).delete()
+        db.commit()
+        # Re-sync World Cup matches
+        import asyncio
+        asyncio.run(sync_matches_from_api(db))
+        recalculate_all_bets(db)
+        return JSONResponse({"success": True, "message": "✅ Todos los datos eliminados. Mundial sincronizado desde 0."})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ─── Backup / Restore ────────────────────────────────────

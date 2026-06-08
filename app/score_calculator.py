@@ -24,6 +24,7 @@ def calculate_bet_points(match: Match, bet: Bet) -> dict:
         "points_total": 0,
     }
 
+    # All matches count for points (friendlies & world cup)
     if not match.is_finished or match.home_score is None or match.away_score is None:
         return result
 

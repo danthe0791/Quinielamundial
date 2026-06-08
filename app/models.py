@@ -22,7 +22,7 @@ class Match(Base):
     __tablename__ = "matches"
 
     id = Column(Integer, primary_key=True, index=True)
-    openligadb_match_id = Column(Integer, unique=True, nullable=False)
+    openligadb_match_id = Column(Integer, unique=True, nullable=True)
     home_team = Column(String(100), nullable=False)
     away_team = Column(String(100), nullable=False)
     home_short = Column(String(10))
@@ -42,6 +42,7 @@ class Match(Base):
     away_corners = Column(Integer, nullable=True)  # Corners visitante (real)
     cards_line = Column(Float, default=3.5)        # Línea Over/Under tarjetas totales
     corners_line = Column(Float, default=7.5)      # Línea Over/Under corners totales
+    is_friendly = Column(Boolean, default=False)   # Partido amistoso (pruebas, no puntúa)
     is_finished = Column(Boolean, default=False)
     last_updated = Column(DateTime)
 

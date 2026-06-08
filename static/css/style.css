@@ -502,6 +502,15 @@ body {
     color: var(--gray-500);
 }
 
+.friendly-label {
+    background: #f3e8ff;
+    color: #7c3aed;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
@@ -927,6 +936,15 @@ body {
     border-color: var(--primary);
     color: var(--primary);
     background: var(--primary-light);
+}
+
+.btn-danger {
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+}
+
+.btn-danger:hover {
+    background: #fde8e8 !important;
 }
 
 .admin-message {

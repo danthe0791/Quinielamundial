@@ -68,11 +68,14 @@
                     {{ format_cst(match.match_date_utc) }} CST
                     {% endif %}
                 </span>
+                {% if match.is_friendly %}
+                <span class="match-status friendly-label">🧪 Amistoso</span>
+                {% endif %}
                 {% if match.is_finished %}
                 <span class="match-status finished-label">Finalizado</span>
-                {% elif match_started %}
+                {% elif match_started and not match.is_friendly %}
                 <span class="match-status live-label">En vivo</span>
-                {% else %}
+                {% elif not match.is_friendly %}
                 <span class="match-status pending-label">Próximo</span>
                 {% endif %}
                 <button class="btn-bets-view" onclick="showMatchBets({{ match.id }})" title="Ver quién apostó">

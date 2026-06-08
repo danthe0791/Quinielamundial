@@ -9,18 +9,25 @@ from sqlalchemy.orm import Session
 
 from .models import Match
 
-LEAGUE_SHORTCUT = "wm26"
-LEAGUE_SEASON = 2026
+LEAGUES = [
+    {"shortcut": "wm26", "season": 2026},
+]
 BASE_URL = "https://api.openligadb.de"
 
 
 async def fetch_all_matches() -> list[dict]:
-    """Fetch all matches for WM 2026 from OpenLigaDB."""
-    url = f"{BASE_URL}/getmatchdata/{LEAGUE_SHORTCUT}/{LEAGUE_SEASON}"
+    """Fetch all matches for all configured leagues."""
+    all_matches = []
     async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.get(url)
-        response.raise_for_status()
-        return response.json()
+        for league in LEAGUES:
+            url = f"{BASE_URL}/getmatchdata/{league['shortcut']}/{league['season']}"
+            try:
+                response = await client.get(url)
+                response.raise_for_status()
+                all_matches.extend(response.json())
+            except Exception as e:
+                print(f"Error fetching {league['shortcut']}: {e}")
+    return all_matches
 
 
 async def fetch_available_groups() -> list[dict]:

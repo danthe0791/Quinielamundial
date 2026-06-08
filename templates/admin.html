@@ -33,6 +33,8 @@
             <button onclick="syncMatches()" class="btn-admin">🔄 Sincronizar Partidos</button>
             <button onclick="recalculatePoints()" class="btn-admin">🧮 Recalcular Puntos</button>
             <button onclick="closeDay()" class="btn-admin">📅 Cerrar Día (tabla general)</button>
+            <button onclick="seedFriendlies()" class="btn-admin">🧪 Crear Amistosos (hoy/mañana)</button>
+            <button onclick="resetAllData()" class="btn-admin btn-danger">🗑️ Reset Total (iniciar mundial)</button>
             <a href="/admin/backup" class="btn-admin" download>💾 Backup DB</a>
         </div>
         <div id="admin-message" class="admin-message"></div>
@@ -161,6 +163,34 @@ async function syncMatches() {
             : `<div class="alert alert-error">❌ ${data.error}</div>`;
         if (data.success) setTimeout(() => location.reload(), 1500);
     } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error de conexión</div>'; }
+}
+
+async function seedFriendlies() {
+    const msg = document.getElementById('admin-message');
+    msg.innerHTML = '<div class="alert alert-info">Creando amistosos...</div>';
+    try {
+        const resp = await fetch('/admin/seed-friendlies', { method: 'POST' });
+        const data = await resp.json();
+        msg.innerHTML = data.success
+            ? `<div class="alert alert-success">✅ ${data.message}</div>`
+            : `<div class="alert alert-error">❌ ${data.error}</div>`;
+        if (data.success) setTimeout(() => location.reload(), 1500);
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+}
+
+async function resetAllData() {
+    const msg = document.getElementById('admin-message');
+    if (!confirm('⚠️ ¿Estás seguro? Se borrarán TODAS las apuestas, puntajes y partidos de prueba. El mundial comenzará desde 0.')) return;
+    if (!confirm('🔥 Confirmación final. ¿Resetear todo para el inicio del mundial?')) return;
+    msg.innerHTML = '<div class="alert alert-info">Reseteando...</div>';
+    try {
+        const resp = await fetch('/admin/reset-all', { method: 'POST' });
+        const data = await resp.json();
+        msg.innerHTML = data.success
+            ? `<div class="alert alert-success">${data.message}</div>`
+            : `<div class="alert alert-error">❌ ${data.error}</div>`;
+        if (data.success) setTimeout(() => location.reload(), 2000);
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
 }
 
 async function recalculatePoints() {
