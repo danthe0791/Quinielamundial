@@ -498,12 +498,12 @@ def admin_update_match(
 
 # ─── Partidos Amistosos (futuros, para pruebas) ─────────
 FUTURE_FRIENDLIES = [
-    {"home": "España", "away": "Perú", "day_offset": 0, "hour": 22, "minute": 0},
-    {"home": "Brasil", "away": "Argentina", "day_offset": 0, "hour": 23, "minute": 0},
-    {"home": "Alemania", "away": "Francia", "day_offset": 0, "hour": 23, "minute": 30},
-    {"home": "Inglaterra", "away": "Italia", "day_offset": 1, "hour": 3, "minute": 0},
-    {"home": "Países Bajos", "away": "Portugal", "day_offset": 1, "hour": 5, "minute": 0},
-    {"home": "Uruguay", "away": "Colombia", "day_offset": 1, "hour": 9, "minute": 0},
+    {"home": "España", "away": "Perú", "day_offset": 1, "hour": 12, "minute": 0},
+    {"home": "Brasil", "away": "Argentina", "day_offset": 1, "hour": 13, "minute": 0},
+    {"home": "Alemania", "away": "Francia", "day_offset": 1, "hour": 14, "minute": 0},
+    {"home": "Inglaterra", "away": "Italia", "day_offset": 1, "hour": 15, "minute": 0},
+    {"home": "Países Bajos", "away": "Portugal", "day_offset": 1, "hour": 16, "minute": 0},
+    {"home": "Uruguay", "away": "Colombia", "day_offset": 1, "hour": 17, "minute": 0},
 ]
 
 @app.post("/admin/seed-friendlies")
@@ -521,6 +521,11 @@ def admin_seed_friendlies(request: Request, db: Session = Depends(get_db)):
             Match.home_team == fm["home"], Match.away_team == fm["away"]
         ).first()
         if exists:
+            # Update time to new schedule
+            exists.match_date = dt
+            exists.match_date_utc = dt
+            exists.last_updated = datetime.utcnow()
+            created += 1
             continue
 
         db.add(Match(
