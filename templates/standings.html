@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Tabla de Posiciones{% endblock %}
+
+{% block content %}
+<div class="standings-page">
+    <div class="standings-header">
+        <h1>📊 Tabla de Posiciones</h1>
+        <p class="standings-subtitle">Clasificación general acumulativa</p>
+    </div>
+
+    <div class="standings-container">
+        {% if standings %}
+        <div class="standings-table-wrapper">
+            <table class="standings-table">
+                <thead>
+                    <tr>
+                        <th class="col-rank">#</th>
+                        <th class="col-name">Participante</th>
+                        <th class="col-points">Puntos</th>
+                        <th class="col-results">Aciertos</th>
+                        <th class="col-exact">Exactos</th>
+                        <th class="col-exact">Tarjetas</th>
+                        <th class="col-exact">Corners</th>
+                        <th class="col-bets">Pronósticos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in standings %}
+                    <tr class="{% if s.user_id == user.id %}current-user{% endif %}">
+                        <td class="col-rank">
+                            {% if s.rank == 1 %}🥇
+                            {% elif s.rank == 2 %}🥈
+                            {% elif s.rank == 3 %}🥉
+                            {% else %}{{ s.rank }}{% endif %}
+                        </td>
+                        <td class="col-name">
+                            <span class="participant-name">{{ s.username }}</span>
+                            {% if s.user_id == user.id %}<span class="you-badge">Tú</span>{% endif %}
+                        </td>
+                        <td class="col-points"><strong>{{ s.total_points }}</strong></td>
+                        <td class="col-results">{{ s.correct_results }}</td>
+                        <td class="col-exact">{{ s.exact_scores }}</td>
+                        <td class="col-exact">{{ s.correct_cards }}</td>
+                        <td class="col-exact">{{ s.correct_corners }}</td>
+                        <td class="col-bets">{{ s.total_bets }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="scoring-info">
+            <h3>📋 Sistema de Puntuación</h3>
+            <ul>
+                <li><strong>Resultado correcto</strong> (quién gana o empate): <span class="points-example">2 puntos</span></li>
+                <li><strong>Marcador exacto</strong>: <span class="points-example">+3 puntos adicionales</span></li>
+                <li><strong>Tarjetas</strong> (Over/Under): <span class="points-example">1 punto</span></li>
+                <li><strong>Corners</strong> (Over/Under): <span class="points-example">1 punto</span></li>
+                <li>Total posible por partido: <span class="points-example">hasta 7 puntos</span></li>
+            </ul>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Aún no hay participantes o partidos finalizados</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

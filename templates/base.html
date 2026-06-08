@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quiniela Mundial 2026{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">🏆</span>
+                <span class="logo-text">Quiniela Mundial 2026</span>
+            </a>
+            <div class="nav-links">
+                {% if user %}
+                    <a href="/dashboard" class="nav-link">Partidos</a>
+                    <a href="/standings" class="nav-link">Tabla</a>
+                    <a href="/daily-results" class="nav-link">Cierres</a>
+                    {% if user.is_admin %}
+                        <a href="/admin" class="nav-link admin-link">Admin</a>
+                    {% endif %}
+                    <div class="user-dropdown">
+                        <span class="user-name">{{ user.display_name }}</span>
+                        <a href="/logout" class="btn-small">Salir</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="nav-link">Ingresar</a>
+                    <a href="/register" class="btn-primary">Registrarse</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>Quiniela Mundial 2026 &mdash; Datos por <a href="https://www.openligadb.de/" target="_blank">OpenLigaDB</a> &mdash; Horarios CST (UTC-6)</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

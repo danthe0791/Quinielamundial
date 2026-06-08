@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% block title %}Mis Apuestas{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>⚽ Partidos del Mundial 2026</h1>
+        <div class="last-sync" id="lastSync">🔄 Sincronizando...</div>
+        {% if stats %}
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.total_points }}</span>
+                <span class="stat-label">Puntos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.correct_results }}</span>
+                <span class="stat-label">Aciertos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.exact_scores }}</span>
+                <span class="stat-label">Exactos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.cards_correct or 0 }}</span>
+                <span class="stat-label">Tarjetas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.corners_correct or 0 }}</span>
+                <span class="stat-label">Corners</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.accuracy }}%</span>
+                <span class="stat-label">Precisión</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Group filter tabs -->
+    <div class="group-tabs">
+        <a href="/dashboard" class="group-tab {% if not current_group %}active{% endif %}">Todos</a>
+        {% for g in groups %}
+        <a href="/dashboard?group={{ g.group_order }}" class="group-tab {% if current_group == g.group_order %}active{% endif %}">
+            {{ g.group_name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Matches list -->
+    <div class="matches-container">
+        {% set current_stage = namespace(value='') %}
+        {% for match in matches %}
+        {% if match.stage != current_stage.value %}
+        {% set current_stage.value = match.stage %}
+        <div class="stage-header">
+            <h2>{% if match.stage == 'Grupos' %}{{ match.group_name }}{% else %}{{ match.stage }}{% endif %}</h2>
+        </div>
+        {% endif %}
+
+        {% set bet = bets.get(match.id) %}
+        {% set match_bets = all_bets.get(match.id, []) %}
+        {% set match_started = match.match_date_utc and match.match_date_utc < now() %}
+        
+        <div class="match-card {% if match.is_finished %}finished{% endif %}" id="match-{{ match.id }}">
+            <div class="match-info">
+                <span class="match-date">
+                    {% if match.match_date_utc %}
+                    {{ format_cst(match.match_date_utc) }} CST
+                    {% endif %}
+                </span>
+                {% if match.is_finished %}
+                <span class="match-status finished-label">Finalizado</span>
+                {% elif match_started %}
+                <span class="match-status live-label">En vivo</span>
+                {% else %}
+                <span class="match-status pending-label">Próximo</span>
+                {% endif %}
+                <button class="btn-bets-view" onclick="showMatchBets({{ match.id }})" title="Ver quién apostó">
+                    👥 {{ match_bets|length }}
+                </button>
+            </div>
+
+            <div class="match-teams">
+                <div class="team home-team">
+                    <div class="team-info">
+                        {% if match.home_icon %}
+                        <img src="{{ match.home_icon }}" alt="{{ match.home_team }}" class="team-flag" loading="lazy"
+                             onerror="this.style.display='none'">
+                        {% endif %}
+                        <span class="team-name">{{ match.home_team }}</span>
+                    </div>
+                </div>
+
+                <div class="score-area">
+                    {% if match.is_finished and match.home_score is not none %}
+                    <div class="actual-score">
+                        <span class="score-home {% if bet and bet.home_score_pred == match.home_score and bet.away_score_pred == match.away_score %}exact-match{% endif %}">
+                            {{ match.home_score }}
+                        </span>
+                        <span class="score-separator">-</span>
+                        <span class="score-away {% if bet and bet.home_score_pred == match.home_score and bet.away_score_pred == match.away_score %}exact-match{% endif %}">
+                            {{ match.away_score }}
+                        </span>
+                    </div>
+                    {% if match.home_cards is not none or match.home_corners is not none %}
+                    <div class="extra-stats">
+                        {% if match.home_cards is not none %}
+                        <span class="extra-stat">🟨 {{ match.home_cards }}-{{ match.away_cards }}</span>
+                        {% endif %}
+                        {% if match.home_corners is not none %}
+                        <span class="extra-stat">🚩 {{ match.home_corners }}-{{ match.away_corners }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="extra-stats">
+                        <span class="extra-stat">🟨 O/U {{ match.cards_line or 3.5 }}</span>
+                        <span class="extra-stat">🚩 O/U {{ match.corners_line or 7.5 }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="bet-form" data-match-id="{{ match.id }}">
+                        <div class="score-inputs">
+                            <input type="number" class="score-input home-input" 
+                                   placeholder="?" min="0" max="99"
+                                   value="{{ bet.home_score_pred if bet else '' }}"
+                                   {% if match.is_finished or match_started %}disabled{% endif %}>
+                            <span class="score-dash">-</span>
+                            <input type="number" class="score-input away-input" 
+                                   placeholder="?" min="0" max="99"
+                                   value="{{ bet.away_score_pred if bet else '' }}"
+                                   {% if match.is_finished or match_started %}disabled{% endif %}>
+                        </div>
+                        <button class="btn-bet {% if bet %}has-bet{% endif %}" 
+                                onclick="openBetModal(this)" 
+                                {% if match.is_finished or match_started %}disabled{% endif %}>
+                            {% if bet %}Actualizar{% else %}Apostar{% endif %}
+                        </button>
+                    </div>
+
+                    {% if bet and bet.points_total > 0 %}
+                    <div class="bet-points">
+                        <span class="points-badge">+{{ bet.points_total }} pts</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="team away-team">
+                    <div class="team-info">
+                        <span class="team-name">{{ match.away_team }}</span>
+                        {% if match.away_icon %}
+                        <img src="{{ match.away_icon }}" alt="{{ match.away_team }}" class="team-flag" loading="lazy"
+                             onerror="this.style.display='none'">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if bet and match.is_finished %}
+            <div class="bet-result-detail">
+                <span class="result-label">Tu apuesta: {{ bet.home_score_pred }}-{{ bet.away_score_pred }}
+                    {% if bet.cards_over is not none %} 🟨{{ bet.cards_over and 'Over' or 'Under' }}{% endif %}
+                    {% if bet.corners_over is not none %} 🚩{{ bet.corners_over and 'Over' or 'Under' }}{% endif %}
+                </span>
+                <span class="result-points">
+                    Marcador: +{{ bet.points_result }}+{{ bet.points_score }} |
+                    Tarjetas: +{{ bet.points_cards }} |
+                    Corners: +{{ bet.points_corners }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No hay partidos disponibles</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Bet Modal -->
+<div id="betModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeBetModal()">&times;</span>
+        <h2 id="modalTitle">Apuesta</h2>
+        <form id="betForm" onsubmit="return false;">
+            <input type="hidden" id="modalMatchId">
+            <div class="modal-section">
+                <h3>⚽ Marcador</h3>
+                <div class="modal-inputs">
+                    <div class="modal-team-input">
+                        <label id="modalHomeLabel">Local</label>
+                        <input type="number" id="modalHomeScore" class="score-input" min="0" max="99" placeholder="0">
+                    </div>
+                    <span class="score-dash">-</span>
+                    <div class="modal-team-input">
+                        <label id="modalAwayLabel">Visita</label>
+                        <input type="number" id="modalAwayScore" class="score-input" min="0" max="99" placeholder="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h3>🟨 Tarjetas - Over/Under <span class="line-info" id="cardsLineInfo">(línea: 3.5)</span></h3>
+                <div class="ou-selector" id="cardsSelector">
+                    <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('cards', true)">Over</button>
+                    <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('cards', false)">Under</button>
+                </div>
+                <input type="hidden" id="modalCardsOver" value="">
+            </div>
+            <div class="modal-section">
+                <h3>🚩 Corners - Over/Under <span class="line-info" id="cornersLineInfo">(línea: 7.5)</span></h3>
+                <div class="ou-selector" id="cornersSelector">
+                    <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('corners', true)">Over</button>
+                    <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('corners', false)">Under</button>
+                </div>
+                <input type="hidden" id="modalCornersOver" value="">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary btn-full" onclick="submitBetModal()">Guardar Apuesta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Match Bets Modal -->
+<div id="matchBetsModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeMatchBetsModal()">&times;</span>
+        <h2>👥 Apuestas del Partido</h2>
+        <div id="matchBetsContent"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentBetButton = null;
+
+function openBetModal(button) {
+    currentBetButton = button;
+    const form = button.closest('.bet-form');
+    const matchId = form.dataset.matchId;
+    const matchCard = document.getElementById('match-' + matchId);
+    const homeName = matchCard.querySelector('.home-team .team-name').textContent.trim();
+    const awayName = matchCard.querySelector('.away-team .team-name').textContent.trim();
+    const homeInput = form.querySelector('.home-input');
+    const awayInput = form.querySelector('.away-input');
+
+    document.getElementById('modalMatchId').value = matchId;
+    document.getElementById('modalTitle').textContent = homeName + ' vs ' + awayName;
+    document.getElementById('modalHomeLabel').textContent = homeName;
+    document.getElementById('modalAwayLabel').textContent = awayName;
+    document.getElementById('modalHomeScore').value = homeInput.value || '';
+    document.getElementById('modalAwayScore').value = awayInput.value || '';
+    document.getElementById('modalCardsOver').value = '';
+    document.getElementById('modalCornersOver').value = '';
+    document.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
+
+    document.getElementById('betModal').classList.add('show');
+}
+
+function selectOU(type, value) {
+    const selector = document.getElementById(type + 'Selector');
+    const hidden = document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1) + 'Over');
+    selector.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
+    const btn = selector.querySelector('.ou-' + (value ? 'over' : 'under'));
+    if (btn) btn.classList.add('active');
+    hidden.value = value ? 'over' : 'under';
+}
+
+function closeBetModal() {
+    document.getElementById('betModal').classList.remove('show');
+    currentBetButton = null;
+}
+
+async function submitBetModal() {
+    const matchId = document.getElementById('modalMatchId').value;
+    const homeScore = parseInt(document.getElementById('modalHomeScore').value) || 0;
+    const awayScore = parseInt(document.getElementById('modalAwayScore').value) || 0;
+    const cardsOver = document.getElementById('modalCardsOver').value || '';
+    const cornersOver = document.getElementById('modalCornersOver').value || '';
+
+    if (homeScore < 0 || awayScore < 0) {
+        showToast('❌ Marcadores inválidos', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('match_id', matchId);
+    formData.append('home_score', homeScore);
+    formData.append('away_score', awayScore);
+    if (cardsOver) formData.append('cards_over', cardsOver);
+    if (cornersOver) formData.append('corners_over', cornersOver);
+
+    try {
+        const resp = await fetch('/api/bet', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.success) {
+            showToast('✅ Apuesta guardada', 'success');
+            closeBetModal();
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showToast('❌ ' + (data.error || 'Error'), 'error');
+        }
+    } catch (e) {
+        showToast('❌ Error de conexión', 'error');
+    }
+}
+
+async function showMatchBets(matchId) {
+    try {
+        const resp = await fetch('/api/match-bets/' + matchId);
+        const data = await resp.json();
+        const content = document.getElementById('matchBetsContent');
+
+        if (data.bets && data.bets.length > 0) {
+            let html = `<p class="modal-match-title">${data.match}</p>`;
+            if (data.home_score !== null) {
+                html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} | 
+                    Tarjetas: Over/Under ${data.cards_line} | Corners: Over/Under ${data.corners_line}</p>`;
+            }
+            html += `<div class="bets-table-wrapper"><table class="bets-table">
+                <thead><tr>
+                    <th>Participante</th>
+                    <th>Marcador</th>
+                    <th>Tarjetas O/U</th>
+                    <th>Corners O/U</th>
+                    <th>Pts</th>
+                </tr></thead><tbody>`;
+            data.bets.forEach(b => {
+                html += `<tr>
+                    <td><strong>${b.user}</strong></td>
+                    <td>${b.home_score ?? '-'}-${b.away_score ?? '-'}</td>
+                    <td>${b.cards || '-'}</td>
+                    <td>${b.corners || '-'}</td>
+                    <td>${b.points || 0}</td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            content.innerHTML = html;
+        } else {
+            content.innerHTML = '<p class="empty-state">No hay apuestas para este partido</p>';
+        }
+        document.getElementById('matchBetsModal').classList.add('show');
+    } catch (e) {
+        showToast('❌ Error al cargar apuestas', 'error');
+    }
+}
+
+function closeMatchBetsModal() {
+    document.getElementById('matchBetsModal').classList.remove('show');
+}
+
+// Close modals on overlay click
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal').forEach(m => {
+        m.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+    });
+});
+
+// Auto-refresh every 30 seconds
+setInterval(async function() {
+    try {
+        const resp = await fetch('/api/live-matches');
+        if (!resp.ok) return;
+        const data = await resp.json();
+
+        // Update last sync time
+        const syncEl = document.getElementById('lastSync');
+        if (data.last_sync && syncEl) {
+            const d = new Date(data.last_sync + 'Z');
+            syncEl.textContent = '🔄 Actualizado: ' + d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) + ' CST';
+            syncEl.style.color = 'var(--secondary)';
+        }
+
+        // Update match cards
+        (data.matches || data).forEach(m => {
+            const card = document.getElementById('match-' + m.id);
+            if (!card) return;
+            const statusEl = card.querySelector('.match-status');
+            const prevStatus = statusEl ? statusEl.textContent : '';
+
+            if (m.is_finished && prevStatus !== 'Finalizado') {
+                statusEl.textContent = 'Finalizado';
+                statusEl.className = 'match-status finished-label';
+                card.classList.add('finished');
+                // Reload page to show updated scores
+                setTimeout(() => location.reload(), 2000);
+            } else if (m.match_date_utc && new Date(m.match_date_utc) < new Date() && prevStatus !== 'En vivo' && !m.is_finished) {
+                statusEl.textContent = 'En vivo';
+                statusEl.className = 'match-status live-label';
+            }
+        });
+    } catch(e) {}
+}, 30000);
+</script>
+{% endblock %}

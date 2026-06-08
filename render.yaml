@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: quiniela-mundial-2026
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    plan: free

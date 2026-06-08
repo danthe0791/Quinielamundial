@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Administración{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1>🔧 Administración</h1>
+    </div>
+
+    <div class="admin-stats">
+        <div class="admin-stat-card">
+            <span class="admin-stat-value">{{ users|length }}</span>
+            <span class="admin-stat-label">Participantes</span>
+        </div>
+        <div class="admin-stat-card">
+            <span class="admin-stat-value">{{ match_count }}</span>
+            <span class="admin-stat-label">Partidos</span>
+        </div>
+        <div class="admin-stat-card">
+            <span class="admin-stat-value">{{ finished_count }}</span>
+            <span class="admin-stat-label">Finalizados</span>
+        </div>
+        <div class="admin-stat-card">
+            <span class="admin-stat-value">{{ total_bets }}</span>
+            <span class="admin-stat-label">Apuestas</span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="admin-actions">
+        <h2>Acciones</h2>
+        <div class="admin-action-buttons">
+            <button onclick="syncMatches()" class="btn-admin">🔄 Sincronizar Partidos</button>
+            <button onclick="recalculatePoints()" class="btn-admin">🧮 Recalcular Puntos</button>
+            <button onclick="closeDay()" class="btn-admin">📅 Cerrar Día (tabla general)</button>
+            <a href="/admin/backup" class="btn-admin" download>💾 Backup DB</a>
+        </div>
+        <div id="admin-message" class="admin-message"></div>
+    </div>
+
+    <!-- Min participants setting -->
+    <div class="admin-actions">
+        <h2>Configuración</h2>
+        <div class="setting-row">
+            <label>Mínimo de participantes para apostar:</label>
+            <form method="POST" action="/admin/set-min-participants" class="inline-form" onsubmit="return setMinParticipants(this)">
+                <input type="number" name="value" value="{{ min_participants }}" min="0" max="10" class="score-input" style="width:70px">
+                <button type="submit" class="btn-admin">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Historial de cierres -->
+    <div class="admin-actions">
+        <h2>Historial de Cierres</h2>
+        {% if closures %}
+        <table class="users-table">
+            <thead><tr><th>Fecha</th><th>Partidos</th></tr></thead>
+            <tbody>
+                {% for c in closures %}
+                <tr><td>{{ c.closure_date.strftime('%d/%m/%Y') }}</td><td>{{ c.matches_count }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color:var(--gray-400)">Sin cierres aún</p>
+        {% endif %}
+    </div>
+
+    <!-- Match stats editor -->
+    <div class="admin-actions">
+        <h2>Actualizar Estadísticas de Partidos</h2>
+        <p class="standings-subtitle">Ingresa los resultados reales (marcador, tarjetas, corners)</p>
+        <div class="match-edit-grid">
+            {% for m in matches %}
+            <div class="match-edit-card">
+                <div class="match-edit-header">
+                    <strong>{{ m.home_team }} vs {{ m.away_team }}</strong>
+                    <span class="match-status {% if m.is_finished %}finished-label{% else %}pending-label{% endif %}">
+                        {{ 'Finalizado' if m.is_finished else 'Pendiente' }}
+                    </span>
+                </div>
+                <form class="match-edit-form" onsubmit="return updateMatchStats(this)">
+                    <input type="hidden" name="match_id" value="{{ m.id }}">
+                    <div class="match-edit-row">
+                        <div class="edit-field">
+                            <label>Marcador</label>
+                            <div class="edit-inputs">
+                                <input type="number" name="home_score" class="score-input" value="{{ m.home_score or '' }}" placeholder="L" min="0">
+                                <span>-</span>
+                                <input type="number" name="away_score" class="score-input" value="{{ m.away_score or '' }}" placeholder="V" min="0">
+                            </div>
+                        </div>
+                        <div class="edit-field">
+                            <label>🟨 Tarjetas (real)</label>
+                            <div class="edit-inputs">
+                                <input type="number" name="home_cards" class="score-input" value="{{ m.home_cards or '' }}" placeholder="L" min="0">
+                                <span>-</span>
+                                <input type="number" name="away_cards" class="score-input" value="{{ m.away_cards or '' }}" placeholder="V" min="0">
+                            </div>
+                        </div>
+                        <div class="edit-field">
+                            <label>🚩 Corners (real)</label>
+                            <div class="edit-inputs">
+                                <input type="number" name="home_corners" class="score-input" value="{{ m.home_corners or '' }}" placeholder="L" min="0">
+                                <span>-</span>
+                                <input type="number" name="away_corners" class="score-input" value="{{ m.away_corners or '' }}" placeholder="V" min="0">
+                            </div>
+                        </div>
+                        <div class="edit-field">
+                            <label>Línea Tarjetas O/U</label>
+                            <input type="number" name="cards_line" class="score-input" value="{{ m.cards_line or 3.5 }}" min="0" step="0.5" style="width:70px">
+                        </div>
+                        <div class="edit-field">
+                            <label>Línea Corners O/U</label>
+                            <input type="number" name="corners_line" class="score-input" value="{{ m.corners_line or 7.5 }}" min="0" step="0.5" style="width:70px">
+                        </div>
+                    </div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_finished" value="true" {% if m.is_finished %}checked{% endif %}>
+                        Finalizado
+                    </label>
+                    <button type="submit" class="btn-admin" style="margin-top:8px">Actualizar</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Users list -->
+    <div class="admin-users">
+        <h2>Participantes ({{ users|length }}/10)</h2>
+        <table class="users-table">
+            <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Admin</th><th>Registro</th></tr></thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.display_name }}</td>
+                    <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
+                    <td>{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function syncMatches() {
+    const msg = document.getElementById('admin-message');
+    msg.innerHTML = '<div class="alert alert-info">Sincronizando...</div>';
+    try {
+        const resp = await fetch('/admin/sync-matches', { method: 'POST' });
+        const data = await resp.json();
+        msg.innerHTML = data.success
+            ? `<div class="alert alert-success">✅ ${data.message}</div>`
+            : `<div class="alert alert-error">❌ ${data.error}</div>`;
+        if (data.success) setTimeout(() => location.reload(), 1500);
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error de conexión</div>'; }
+}
+
+async function recalculatePoints() {
+    const msg = document.getElementById('admin-message');
+    msg.innerHTML = '<div class="alert alert-info">Recalculando...</div>';
+    try {
+        const resp = await fetch('/admin/recalculate', { method: 'POST' });
+        const data = await resp.json();
+        msg.innerHTML = data.success
+            ? '<div class="alert alert-success">✅ Puntos recalculados</div>'
+            : `<div class="alert alert-error">❌ ${data.error}</div>`;
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+}
+
+async function closeDay() {
+    const msg = document.getElementById('admin-message');
+    if (!confirm('¿Cerrar el día? Se calcularán los puntajes actuales.')) return;
+    msg.innerHTML = '<div class="alert alert-info">Cerrando día...</div>';
+    try {
+        const resp = await fetch('/api/close-day', { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+            msg.innerHTML = '<div class="alert alert-success">✅ Día cerrado correctamente</div>';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            msg.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+        }
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+}
+
+async function setMinParticipants(form) {
+    const msg = document.getElementById('admin-message');
+    const data = new FormData(form);
+    try {
+        const resp = await fetch('/admin/set-min-participants', { method: 'POST', body: data });
+        const result = await resp.json();
+        msg.innerHTML = result.success
+            ? '<div class="alert alert-success">✅ Configuración guardada</div>'
+            : `<div class="alert alert-error">❌ ${result.error}</div>`;
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+    return false;
+}
+
+async function updateMatchStats(form) {
+    const msg = document.getElementById('admin-message');
+    const data = new FormData(form);
+    // If checkbox unchecked, don't send it
+    if (!data.get('is_finished')) data.delete('is_finished');
+    try {
+        const resp = await fetch('/admin/update-match-stats', { method: 'POST', body: data });
+        const result = await resp.json();
+        msg.innerHTML = result.success
+            ? '<div class="alert alert-success">✅ Partido actualizado</div>'
+            : `<div class="alert alert-error">❌ ${result.error}</div>`;
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+    return false;
+}
+</script>
+{% endblock %}

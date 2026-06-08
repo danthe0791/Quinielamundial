@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Quiniela Mundial 2026 - Inicio{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">🏆 Quiniela Mundial 2026</h1>
+        <p class="hero-subtitle">¡Predice los resultados del Mundial y compite con tus amigos!</p>
+        <div class="hero-features">
+            <div class="feature-card">
+                <div class="feature-icon">⚽</div>
+                <h3>Todos los Partidos</h3>
+                <p>Del Mundial 2026 con datos en tiempo real</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Apuesta por Resultado</h3>
+                <p>Acierta quién gana y el marcador exacto</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Tabla de Puntos</h3>
+                <p>Clasificación automática en vivo</p>
+            </div>
+        </div>
+        {% if not user %}
+        <div class="hero-actions">
+            <a href="/register" class="btn-primary btn-large">¡Regístrate y participa!</a>
+            <p class="hero-note">Máximo 10 participantes &middot; Gratis</p>
+        </div>
+        {% else %}
+        <div class="hero-actions">
+            <a href="/dashboard" class="btn-primary btn-large">Ir a mis apuestas</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
