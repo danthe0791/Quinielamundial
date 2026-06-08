@@ -107,18 +107,28 @@ def map_group_to_stage(group_name: str) -> str:
 
 def translate_group_name(name: str) -> str:
     """Translate group name to Spanish."""
-    gn = (name or "")
+    if not name:
+        return "Grupos"
+    # Direct replacements
+    replacements = {
+        "Gruppenphase 1": "Fase de Grupos 1",
+        "Gruppenphase 2": "Fase de Grupos 2",
+        "Gruppenphase 3": "Fase de Grupos 3",
+        "1. Runde": "Fase 1", "2. Runde": "Fase 2", "3. Runde": "Fase 3",
+        "1. Spieltag": "Jornada 1", "2. Spieltag": "Jornada 2",
+        "3. Spieltag": "Jornada 3", "4. Spieltag": "Jornada 4",
+        "5. Spieltag": "Jornada 5", "6. Spieltag": "Jornada 6",
+    }
+    if name in replacements:
+        return replacements[name]
+    gn = name
     if "Gruppenphase" in gn:
-        return gn.replace("Gruppenphase", "Fase de Grupos")
-    if "1. Runde" in gn:
-        return gn.replace("1. Runde", "Fase 1")
-    if "2. Runde" in gn:
-        return gn.replace("2. Runde", "Fase 2")
-    if "3. Runde" in gn:
-        return gn.replace("3. Runde", "Fase 3")
-    if "Spieltag" in gn:
-        parts = gn.split(".")
-        return f"Jornada {parts[0].strip()}" if len(parts) > 1 else gn
+        gn = gn.replace("Gruppenphase", "Fase de Grupos")
+    if ". Runde" in gn:
+        gn = gn.replace(". Runde", "Fase")
+    if ". Spieltag" in gn:
+        gn = gn.split(".")[1].strip()
+        gn = f"Jornada {gn}"
     return gn
 
 

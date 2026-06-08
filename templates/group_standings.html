@@ -5,13 +5,13 @@
 <div class="standings-page">
     <div class="standings-header">
         <h1>🌍 Tabla de Posiciones - Grupos</h1>
-        <p class="standings-subtitle">Datos en tiempo real desde OpenLigaDB</p>
+        <p class="standings-subtitle">Datos oficiales en tiempo real desde OpenLigaDB</p>
     </div>
 
+    <div class="daily-tables">
     {% for group in groups %}
-    <div class="scoring-info" style="margin-bottom:24px">
-        <h3>Grupo {{ group.groupName or '' }}</h3>
-        {% if group.teamTable %}
+    <div class="scoring-info" style="margin-bottom:16px">
+        <h3>Grupo {{ group.teamGroupName | replace('Gruppe ', '') }}</h3>
         <div class="standings-table-wrapper">
             <table class="standings-table">
                 <thead><tr>
@@ -27,14 +27,14 @@
                     <th class="col-exact">DG</th>
                 </tr></thead>
                 <tbody>
-                    {% for row in group.teamTable %}
+                    {% for row in group.teams %}
                     <tr>
-                        <td class="col-rank">{{ row.rank }}</td>
+                        <td class="col-rank">{{ loop.index }}</td>
                         <td class="col-name">
                             {% if row.teamIconUrl %}
                             <img src="{{ row.teamIconUrl }}" style="width:20px;height:14px;vertical-align:middle;margin-right:6px" onerror="this.style.display='none'">
                             {% endif %}
-                            <strong>{{ row.teamName }}</strong>
+                            <strong>{{ translate(row.teamName) }}</strong>
                         </td>
                         <td class="col-points"><strong>{{ row.points }}</strong></td>
                         <td class="col-results">{{ row.matches }}</td>
@@ -49,14 +49,12 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <p class="empty-state" style="padding:16px">Sin datos aún</p>
-        {% endif %}
     </div>
+    {% if loop.index % 2 == 0 %}</div><div class="daily-tables">{% endif %}
     {% else %}
-    <div class="empty-state">
-        <p>No hay datos de grupos disponibles</p>
-    </div>
+    <p class="empty-state">Cargando datos de grupos...</p>
     {% endfor %}
+    </div>
 </div>
 {% endblock %}
+

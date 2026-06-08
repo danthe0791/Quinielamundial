@@ -13,7 +13,7 @@ import os
 
 from .database import init_db, get_db, SessionLocal
 from .models import User, Match, Bet, DailyClosure, AppSettings
-from .openligadb import sync_matches_from_api, fetch_group_standings
+from .openligadb import sync_matches_from_api, fetch_group_standings, translate_group_name, translate
 from .score_calculator import (
     calculate_bet_points,
     recalculate_all_bets,
@@ -51,6 +51,8 @@ templates.env.globals["now"] = lambda: datetime.utcnow()
 templates.env.globals["utc_to_cst"] = utc_to_cst
 templates.env.globals["format_cst"] = format_cst
 templates.env.globals["timedelta"] = timedelta
+templates.env.globals["translate_group"] = translate_group_name
+templates.env.globals["translate"] = translate
 
 sessions: dict[str, dict] = {}
 SESSION_EXPIRE_HOURS = 24

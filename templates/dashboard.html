@@ -41,7 +41,7 @@
         <a href="/dashboard" class="group-tab {% if not current_group %}active{% endif %}">Todos</a>
         {% for g in groups %}
         <a href="/dashboard?group={{ g.group_order }}" class="group-tab {% if current_group == g.group_order %}active{% endif %}">
-            {{ g.group_name }}
+            {{ translate_group(g.group_name) }}
         </a>
         {% endfor %}
     </div>
@@ -53,7 +53,7 @@
         {% if match.stage != current_stage.value %}
         {% set current_stage.value = match.stage %}
         <div class="stage-header">
-            <h2>{% if match.stage == 'Grupos' %}{{ match.group_name }}{% else %}{{ match.stage }}{% endif %}</h2>
+            <h2>{% if match.stage == 'Grupos' %}{{ translate_group(match.group_name) }}{% else %}{{ match.stage }}{% endif %}</h2>
         </div>
         {% endif %}
 
