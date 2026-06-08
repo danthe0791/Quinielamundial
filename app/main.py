@@ -276,7 +276,8 @@ def place_bet(
 
 # ─── Match Details (who bet) ─────────────────────────────
 @app.get("/api/match-bets/{match_id}")
-def match_bets_api(match_id: int, db: Session = Depends(get_db)):
+def match_bets_api(match_id: int, request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:
         return JSONResponse({"error": "No encontrado"}, status_code=404)
@@ -284,14 +285,19 @@ def match_bets_api(match_id: int, db: Session = Depends(get_db)):
     bets = db.query(Bet, User).join(User).filter(Bet.match_id == match_id).all()
     data = []
     for bet, usr in bets:
-        data.append({
-            "user": usr.display_name,
-            "home_score": bet.home_score_pred,
-            "away_score": bet.away_score_pred,
-            "cards": "Over" if bet.cards_over is True else ("Under" if bet.cards_over is False else "-"),
-            "corners": "Over" if bet.corners_over is True else ("Under" if bet.corners_over is False else "-"),
-            "points": bet.points_total,
-        })
+        if user and user.is_admin:
+            # Admin sees full details
+            data.append({
+                "user": usr.display_name,
+                "home_score": bet.home_score_pred,
+                "away_score": bet.away_score_pred,
+                "cards": "Over" if bet.cards_over is True else ("Under" if bet.cards_over is False else "-"),
+                "corners": "Over" if bet.corners_over is True else ("Under" if bet.corners_over is False else "-"),
+                "points": bet.points_total,
+            })
+        else:
+            # Regular users only see name
+            data.append({"user": usr.display_name})
     return JSONResponse({
         "match": f"{match.home_team} vs {match.away_team}",
         "home_icon": match.home_icon, "away_icon": match.away_icon,
@@ -299,6 +305,7 @@ def match_bets_api(match_id: int, db: Session = Depends(get_db)):
         "cards_line": match.cards_line,
         "corners_line": match.corners_line,
         "bets": data,
+        "is_admin": user.is_admin if user else False,
     })
 
 
@@ -517,7 +524,7 @@ def admin_reset_all(request: Request, db: Session = Depends(get_db)):
         return JSONResponse({"error": "No autorizado"}, status_code=401)
     
     try:
-        # Delete all bets, matches, closures
+        # Delete bets, matches, closures but KEEP users
         db.query(Bet).delete()
         db.query(Match).delete()
         db.query(DailyClosure).delete()

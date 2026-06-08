@@ -322,23 +322,31 @@ async function showMatchBets(matchId) {
                 html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} | 
                     Tarjetas: Over/Under ${data.cards_line} | Corners: Over/Under ${data.corners_line}</p>`;
             }
-            html += `<div class="bets-table-wrapper"><table class="bets-table">
-                <thead><tr>
-                    <th>Participante</th>
-                    <th>Marcador</th>
-                    <th>Tarjetas O/U</th>
-                    <th>Corners O/U</th>
-                    <th>Pts</th>
-                </tr></thead><tbody>`;
-            data.bets.forEach(b => {
-                html += `<tr>
-                    <td><strong>${b.user}</strong></td>
-                    <td>${b.home_score ?? '-'}-${b.away_score ?? '-'}</td>
-                    <td>${b.cards || '-'}</td>
-                    <td>${b.corners || '-'}</td>
-                    <td>${b.points || 0}</td>
-                </tr>`;
-            });
+            if (data.is_admin) {
+                html += `<div class="bets-table-wrapper"><table class="bets-table">
+                    <thead><tr>
+                        <th>Participante</th>
+                        <th>Marcador</th>
+                        <th>Tarjetas O/U</th>
+                        <th>Corners O/U</th>
+                        <th>Pts</th>
+                    </tr></thead><tbody>`;
+                data.bets.forEach(b => {
+                    html += `<tr>
+                        <td><strong>${b.user}</strong></td>
+                        <td>${b.home_score ?? '-'}-${b.away_score ?? '-'}</td>
+                        <td>${b.cards || '-'}</td>
+                        <td>${b.corners || '-'}</td>
+                        <td>${b.points || 0}</td>
+                    </tr>`;
+                });
+            } else {
+                html += `<div class="bets-list"><strong>Quiénes apostaron:</strong><br>`;
+                data.bets.forEach(b => {
+                    html += `<span class="bettor-name">👤 ${b.user}</span> `;
+                });
+                html += `</div>`;
+            }
             html += `</tbody></table></div>`;
             content.innerHTML = html;
         } else {

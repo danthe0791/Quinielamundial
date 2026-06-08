@@ -1259,6 +1259,22 @@ body {
     background: var(--gray-50);
 }
 
+.bets-list {
+    padding: 16px;
+    text-align: center;
+}
+
+.bettor-name {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
 /* Inline form */
 .inline-form {
     display: flex;
