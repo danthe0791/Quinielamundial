@@ -38,7 +38,8 @@
 
     <!-- Group filter tabs -->
     <div class="group-tabs">
-        <a href="/dashboard" class="group-tab {% if not current_group %}active{% endif %}">Todos</a>
+        <a href="/dashboard" class="group-tab {% if not current_group and not request.query_params.get('today') %}active{% endif %}">Todos</a>
+        <a href="/dashboard?today=1" class="group-tab {% if request.query_params.get('today') %}active{% endif %}">📅 Hoy</a>
         {% for g in groups %}
         <a href="/dashboard?group={{ g.group_order }}" class="group-tab {% if current_group == g.group_order %}active{% endif %}">
             {{ translate_group(g.group_name) }}

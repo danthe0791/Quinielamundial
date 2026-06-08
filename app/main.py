@@ -197,9 +197,21 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=302)
 
     group_order = request.query_params.get("group", None)
+    show_today = request.query_params.get("today", None)
+
     matches_query = db.query(Match).order_by(Match.group_order, Match.match_date_utc)
-    if group_order:
+
+    if show_today:
+        # Filter matches happening today (UTC date)
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+        matches_query = matches_query.filter(
+            Match.match_date_utc >= today_start,
+            Match.match_date_utc < today_end,
+        )
+    elif group_order:
         matches_query = matches_query.filter(Match.group_order == int(group_order))
+
     matches = matches_query.all()
 
     match_ids = [m.id for m in matches]
