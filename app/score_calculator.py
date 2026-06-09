@@ -74,8 +74,9 @@ def calculate_bet_points(match: Match, bet: Bet) -> dict:
     return result
 
 
-def recalculate_all_bets(db: Session):
-    """Recalculate points for all bets based on finished matches."""
+def recalculate_all_bets(db: Session, force_today: bool = False):
+    """Recalculate points for all bets based on finished matches.
+    If force_today=True, sets scored_on to today for all bets with points (for daily closure)."""
     finished_matches = db.query(Match).filter(
         Match.is_finished == True
     ).all()
@@ -88,8 +89,11 @@ def recalculate_all_bets(db: Session):
         if match:
             pts = calculate_bet_points(match, bet)
             new_total = pts["points_total"]
-            # Only set scored_on if points changed (newly awarded)
-            if new_total != (bet.points_total or 0) and new_total > 0 and bet.scored_on is None:
+            old_total = bet.points_total or 0
+            # Set scored_on if points changed or force today
+            if force_today and new_total > 0:
+                bet.scored_on = date.today()
+            elif new_total != old_total and new_total > 0 and bet.scored_on is None:
                 bet.scored_on = date.today()
             bet.points_result = pts["points_result"]
             bet.points_score = pts["points_score"]
@@ -203,8 +207,8 @@ def close_daily_results(db: Session, closed_by: int) -> dict:
     if existing:
         return {"error": "Ya se realizó el cierre de hoy"}
 
-    # Recalculate all bets first
-    recalculate_all_bets(db)
+    # Recalculate and force today's date for daily table
+    recalculate_all_bets(db, force_today=True)
 
     # Get all finished matches
     finished = db.query(Match).filter(Match.is_finished == True).count()

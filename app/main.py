@@ -13,7 +13,8 @@ import os
 
 from .database import init_db, get_db, SessionLocal
 from .models import User, Match, Bet, DailyClosure, AppSettings
-from .openligadb import sync_matches_from_api, fetch_group_standings, translate_group_name, translate
+from .rapidapi import sync_matches_from_api, fetch_group_standings
+from .openligadb import translate_group_name, translate
 from .score_calculator import (
     calculate_bet_points,
     recalculate_all_bets,
