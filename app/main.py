@@ -268,8 +268,8 @@ def place_bet(
     if not match:
         return JSONResponse({"error": "Partido no encontrado"}, status_code=404)
 
-    # Block 15 min before match starts
-    if match.match_date_utc and datetime.utcnow() > (match.match_date_utc - timedelta(minutes=15)):
+    # Block exactly at match start
+    if match.match_date_utc and datetime.utcnow() > match.match_date_utc:
         return JSONResponse({"error": "El partido está por comenzar o ya inició. No puedes modificar tu apuesta."}, status_code=400)
 
     if match.is_finished:
@@ -523,12 +523,9 @@ def admin_update_match(
 
 # ─── Partidos Amistosos (futuros, para pruebas) ─────────
 FUTURE_FRIENDLIES = [
-    {"home": "España", "away": "Perú", "day_offset": 1, "hour": 12, "minute": 0},
-    {"home": "Brasil", "away": "Argentina", "day_offset": 1, "hour": 13, "minute": 0},
-    {"home": "Alemania", "away": "Francia", "day_offset": 1, "hour": 14, "minute": 0},
-    {"home": "Inglaterra", "away": "Italia", "day_offset": 1, "hour": 15, "minute": 0},
-    {"home": "Países Bajos", "away": "Portugal", "day_offset": 1, "hour": 16, "minute": 0},
-    {"home": "Uruguay", "away": "Colombia", "day_offset": 1, "hour": 17, "minute": 0},
+    {"home": "Rusia", "away": "Trinidad y Tobago", "day_offset": 0, "hour": 17, "minute": 0},
+    {"home": "Argentina", "away": "Islandia", "day_offset": 0, "hour": 25, "minute": 0},
+    {"home": "Irak", "away": "Venezuela", "day_offset": 0, "hour": 25, "minute": 0},
 ]
 
 @app.post("/admin/seed-friendlies")
@@ -540,18 +537,13 @@ def admin_seed_friendlies(request: Request, db: Session = Depends(get_db)):
     base = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     created = 0
 
+    # Delete old friendlies to replace with new ones
+    db.query(Bet).filter(Bet.match.has(Match.is_friendly == True)).delete()
+    db.query(Match).filter(Match.is_friendly == True).delete()
+    db.flush()
+
     for fm in FUTURE_FRIENDLIES:
         dt = base + timedelta(days=fm["day_offset"], hours=fm["hour"], minutes=fm["minute"])
-        exists = db.query(Match).filter(
-            Match.home_team == fm["home"], Match.away_team == fm["away"]
-        ).first()
-        if exists:
-            # Update time to new schedule
-            exists.match_date = dt
-            exists.match_date_utc = dt
-            exists.last_updated = datetime.utcnow()
-            created += 1
-            continue
 
         db.add(Match(
             openligadb_match_id=None, home_team=fm["home"], away_team=fm["away"],

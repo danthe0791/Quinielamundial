@@ -60,7 +60,7 @@
 
         {% set bet = bets.get(match.id) %}
         {% set match_bets = all_bets.get(match.id, []) %}
-        {% set match_started = match.match_date_utc and (match.match_date_utc - timedelta(minutes=15)) < now() %}
+        {% set match_started = match.match_date_utc and match.match_date_utc < now() %}
         
         <div class="match-card {% if match.is_finished %}finished{% endif %}" id="match-{{ match.id }}">
             <div class="match-info">
