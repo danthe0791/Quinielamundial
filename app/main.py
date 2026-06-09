@@ -13,7 +13,15 @@ import os
 
 from .database import init_db, get_db, SessionLocal
 from .models import User, Match, Bet, DailyClosure, AppSettings
-from .rapidapi import sync_matches_from_api, fetch_group_standings
+# Try RapidAPI first, fallback to OpenLigaDB
+try:
+    from .rapidapi import sync_matches_from_api, fetch_group_standings
+    if not os.environ.get("RAPIDAPI_KEY"):
+        raise ImportError("No RAPIDAPI_KEY set")
+except (ImportError, Exception):
+    from .openligadb import sync_matches_from_api, fetch_group_standings
+    print("[Startup] Usando OpenLigaDB (API gratuita sin key)")
+
 from .openligadb import translate_group_name, translate
 from .score_calculator import (
     calculate_bet_points,
