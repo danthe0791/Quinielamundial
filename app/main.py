@@ -182,8 +182,8 @@ def register(request: Request, username: str = Form(...), display_name: str = Fo
     if db.query(User).filter(User.username == username).first():
         return templates.TemplateResponse("register.html", {"request": request, "user": None, "error": "El usuario ya existe"})
     user_count = db.query(User).count()
-    if user_count >= 10:
-        return templates.TemplateResponse("register.html", {"request": request, "user": None, "error": "Ya hay 10 usuarios registrados"})
+    if user_count >= 20:
+        return templates.TemplateResponse("register.html", {"request": request, "user": None, "error": "Ya hay 20 usuarios registrados (máximo)"})
     user = User(username=username, display_name=display_name, password_hash=hash_password(password), is_admin=(user_count == 0))
     db.add(user); db.commit()
     token = create_session(user.id)
@@ -465,6 +465,27 @@ def admin_set_min(request: Request, value: int = Form(...), db: Session = Depend
         return JSONResponse({"error": "No autorizado"}, status_code=401)
     set_settings_value(db, "min_participants", str(max(0, min(10, value))))
     return JSONResponse({"success": True, "message": "Configuración actualizada"})
+
+
+@app.post("/admin/delete-user")
+def admin_delete_user(request: Request, user_id: int = Form(...), db: Session = Depends(get_db)):
+    admin_user = get_current_user(request, db)
+    if not admin_user or not admin_user.is_admin:
+        return JSONResponse({"error": "No autorizado"}, status_code=401)
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return JSONResponse({"error": "Usuario no encontrado"}, status_code=404)
+    if user.is_admin:
+        return JSONResponse({"error": "No se puede eliminar al admin"}, status_code=400)
+
+    name = user.display_name
+    # Delete bets first, then user
+    db.query(Bet).filter(Bet.user_id == user_id).delete()
+    db.delete(user)
+    db.commit()
+    return JSONResponse({"success": True, "message": f"Usuario '{name}' eliminado"})
+
 
 @app.post("/admin/update-match-stats")
 def admin_update_match(

@@ -133,7 +133,7 @@
     <div class="admin-users">
         <h2>Participantes ({{ users|length }}/20)</h2>
         <table class="users-table">
-            <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Admin</th><th>Registro</th></tr></thead>
+            <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Admin</th><th>Registro</th><th></th></tr></thead>
             <tbody>
                 {% for u in users %}
                 <tr>
@@ -142,6 +142,11 @@
                     <td>{{ u.display_name }}</td>
                     <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
                     <td>{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '' }}</td>
+                    <td>
+                        {% if not u.is_admin %}
+                        <button onclick="deleteUser({{ u.id }}, '{{ u.display_name }}')" class="btn-small" style="color:var(--danger);border-color:var(--danger)">🗑️</button>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -190,6 +195,22 @@ async function resetAllData() {
             ? `<div class="alert alert-success">${data.message}</div>`
             : `<div class="alert alert-error">❌ ${data.error}</div>`;
         if (data.success) setTimeout(() => location.reload(), 2000);
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+}
+
+async function deleteUser(userId, name) {
+    const msg = document.getElementById('admin-message');
+    if (!confirm(`¿Eliminar a "${name}"? Se borrarán sus apuestas.`)) return;
+    msg.innerHTML = '<div class="alert alert-info">Eliminando...</div>';
+    try {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        const resp = await fetch('/admin/delete-user', { method: 'POST', body: formData });
+        const data = await resp.json();
+        msg.innerHTML = data.success
+            ? `<div class="alert alert-success">✅ ${data.message}</div>`
+            : `<div class="alert alert-error">❌ ${data.error}</div>`;
+        if (data.success) setTimeout(() => location.reload(), 1000);
     } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
 }
 
