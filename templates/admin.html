@@ -52,6 +52,30 @@
         </div>
     </div>
 
+    <!-- Users list -->
+    <div class="admin-users">
+        <h2>Participantes ({{ users|length }}/20)</h2>
+        <table class="users-table">
+            <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Admin</th><th>Registro</th><th></th></tr></thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.display_name }}</td>
+                    <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
+                    <td>{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '' }}</td>
+                    <td>
+                        {% if not u.is_admin %}
+                        <button onclick="deleteUser({{ u.id }}, '{{ u.display_name }}')" class="btn-small" style="color:var(--danger);border-color:var(--danger)">🗑️</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <!-- Historial de cierres -->
     <div class="admin-actions">
         <h2>Historial de Cierres</h2>
@@ -129,29 +153,6 @@
         </div>
     </div>
 
-    <!-- Users list -->
-    <div class="admin-users">
-        <h2>Participantes ({{ users|length }}/20)</h2>
-        <table class="users-table">
-            <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Admin</th><th>Registro</th><th></th></tr></thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>{{ u.id }}</td>
-                    <td>{{ u.username }}</td>
-                    <td>{{ u.display_name }}</td>
-                    <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
-                    <td>{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '' }}</td>
-                    <td>
-                        {% if not u.is_admin %}
-                        <button onclick="deleteUser({{ u.id }}, '{{ u.display_name }}')" class="btn-small" style="color:var(--danger);border-color:var(--danger)">🗑️</button>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </div>
 {% endblock %}
 
