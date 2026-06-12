@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Mis Apuestas{% endblock %}
+
+{% block content %}
+<div class="my-bets-page">
+    <div class="my-bets-header">
+        <h1>📋 Mis Apuestas</h1>
+        <p class="standings-subtitle">Todas tus predicciones y resultados</p>
+        {% if stats %}
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.total_points }}</span>
+                <span class="stat-label">Puntos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.correct_results }}</span>
+                <span class="stat-label">Aciertos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.exact_scores }}</span>
+                <span class="stat-label">Exactos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.cards_correct or 0 }}</span>
+                <span class="stat-label">Tarjetas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.corners_correct or 0 }}</span>
+                <span class="stat-label">Corners</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.accuracy }}%</span>
+                <span class="stat-label">Precisión</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if bets %}
+    <div class="my-bets-table-wrapper">
+        <table class="my-bets-table">
+            <thead>
+                <tr>
+                    <th>Partido</th>
+                    <th>Fecha</th>
+                    <th>Tu Marcador</th>
+                    <th>🟨 Tarjetas</th>
+                    <th>🚩 Corners</th>
+                    <th>Resultado</th>
+                    <th>Puntos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bet in bets %}
+                <tr class="
+                    {% if bet.match.is_finished and bet.points_total > 0 %}bet-won{% endif %}
+                    {% if bet.match.is_finished and bet.points_total == 0 %}bet-lost{% endif %}
+                ">
+                    <td class="bet-match-cell">
+                        <div class="bet-match-teams">
+                            <span class="bet-team">
+                                {% if bet.match.home_icon %}
+                                <img src="{{ bet.match.home_icon }}" class="bet-flag" loading="lazy" onerror="this.style.display='none'">
+                                {% endif %}
+                                {{ bet.match.home_team }}
+                            </span>
+                            <span class="bet-vs">vs</span>
+                            <span class="bet-team">
+                                {{ bet.match.away_team }}
+                                {% if bet.match.away_icon %}
+                                <img src="{{ bet.match.away_icon }}" class="bet-flag" loading="lazy" onerror="this.style.display='none'">
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if bet.match.is_friendly %}
+                        <span class="match-status friendly-label">🧪 Amistoso</span>
+                        {% endif %}
+                    </td>
+                    <td class="bet-date-cell">
+                        <span class="bet-date">{{ format_cst(bet.match.match_date_utc) if bet.match.match_date_utc else '' }}</span>
+                        {% if bet.match.is_finished %}
+                        <span class="match-status finished-label">Finalizado</span>
+                        {% elif bet.match.match_date_utc and bet.match.match_date_utc < now() %}
+                        <span class="match-status live-label">En vivo</span>
+                        {% else %}
+                        <span class="match-status pending-label">Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td class="bet-pred-cell">
+                        <span class="bet-pred-score">{{ bet.home_score_pred or '?' }} - {{ bet.away_score_pred or '?' }}</span>
+                    </td>
+                    <td class="bet-ou-cell">
+                        {% if bet.cards_over is not none %}
+                        <span class="ou-pred {{ 'ou-over-pred' if bet.cards_over else 'ou-under-pred' }}">
+                            {{ 'Over' if bet.cards_over else 'Under' }}
+                        </span>
+                        {% else %}
+                        <span class="ou-none">—</span>
+                        {% endif %}
+                        <span class="ou-line">({{ bet.match.cards_line or 3.5 }})</span>
+                    </td>
+                    <td class="bet-ou-cell">
+                        {% if bet.corners_over is not none %}
+                        <span class="ou-pred {{ 'ou-over-pred' if bet.corners_over else 'ou-under-pred' }}">
+                            {{ 'Over' if bet.corners_over else 'Under' }}
+                        </span>
+                        {% else %}
+                        <span class="ou-none">—</span>
+                        {% endif %}
+                        <span class="ou-line">({{ bet.match.corners_line or 7.5 }})</span>
+                    </td>
+                    <td class="bet-result-cell">
+                        {% if bet.match.is_finished and bet.match.home_score is not none %}
+                        <div class="bet-actual">
+                            <span class="bet-actual-score">{{ bet.match.home_score }} - {{ bet.match.away_score }}</span>
+                            <div class="bet-extra-detail">
+                                <span>🟨 {{ bet.match.home_cards or 0 }}-{{ bet.match.away_cards or 0 }}</span>
+                                <span>🚩 {{ bet.match.home_corners or 0 }}-{{ bet.match.away_corners or 0 }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <span style="color:var(--gray-400)">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="bet-pts-cell">
+                        {% if bet.match.is_finished %}
+                        <div class="pts-breakdown">
+                            <span class="pts-total">{% if bet.points_total > 0 %}+{% endif %}{{ bet.points_total }}</span>
+                            <span class="pts-detail" title="Resultado: {{ bet.points_result }} | Exacto: {{ bet.points_score }} | Tarjetas: {{ bet.points_cards }} | Corners: {{ bet.points_corners }}">
+                                M:{{ bet.points_result }}+E:{{ bet.points_score }} T:{{ bet.points_cards }} C:{{ bet.points_corners }}
+                            </span>
+                        </div>
+                        {% else %}
+                        <span style="color:var(--gray-400)">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>📝 Aún no has hecho ninguna apuesta</p>
+        <a href="/dashboard" class="btn-primary" style="margin-top:16px">Ir a apostar</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

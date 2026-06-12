@@ -1405,3 +1405,669 @@ body {
     color: var(--gray-400);
     font-weight: 400;
 }
+
+/* ========================================
+   My Bets Page
+   ======================================== */
+
+.my-bets-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px;
+}
+
+.my-bets-header {
+    margin-bottom: 24px;
+}
+
+.my-bets-header h1 {
+    font-size: 1.8rem;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+}
+
+.my-bets-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.my-bets-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.my-bets-table thead {
+    background: var(--gray-800);
+    color: white;
+}
+
+.my-bets-table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.my-bets-table td {
+    padding: 14px 10px;
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: top;
+}
+
+.my-bets-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.my-bets-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.bet-won {
+    background: #f0fdf4;
+}
+
+.bet-lost {
+    background: #fef2f2;
+}
+
+.bet-match-teams {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.bet-team {
+    font-weight: 600;
+    color: var(--gray-800);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.bet-vs {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+.bet-flag {
+    width: 22px;
+    height: 15px;
+    object-fit: contain;
+    border-radius: 2px;
+}
+
+.bet-date-cell {
+    white-space: nowrap;
+}
+
+.bet-date {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.bet-pred-score {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--primary);
+}
+
+.bet-ou-cell {
+    white-space: nowrap;
+}
+
+.ou-pred {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.ou-over-pred {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.ou-under-pred {
+    background: #fde8e8;
+    color: var(--danger);
+}
+
+.ou-none {
+    color: var(--gray-400);
+}
+
+.ou-line {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    margin-left: 4px;
+}
+
+.bet-actual {
+    text-align: center;
+}
+
+.bet-actual-score {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--gray-800);
+}
+
+.bet-extra-detail {
+    display: flex;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    margin-top: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pts-breakdown {
+    text-align: center;
+}
+
+.pts-total {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--secondary);
+    display: block;
+}
+
+.pts-detail {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+    white-space: nowrap;
+    cursor: help;
+}
+
+/* ========================================
+   Enhanced Responsive
+   ======================================== */
+
+/* Tablet & below */
+@media (max-width: 1024px) {
+    .daily-page,
+    .my-bets-page {
+        padding: 24px 16px;
+    }
+
+    .my-bets-table th,
+    .my-bets-table td {
+        padding: 10px 6px;
+        font-size: 0.82rem;
+    }
+
+    .bet-team {
+        font-size: 0.85rem;
+    }
+}
+
+/* Phone landscape & below */
+@media (max-width: 768px) {
+    /* Navigation */
+    .nav-container {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 16px;
+        gap: 8px;
+    }
+
+    .nav-logo {
+        font-size: 1rem;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        gap: 4px;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .nav-link {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+    .user-dropdown {
+        margin-left: auto;
+    }
+
+    .user-name {
+        font-size: 0.8rem;
+    }
+
+    /* Hero */
+    .hero {
+        padding: 40px 16px 32px;
+    }
+
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .hero-features {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .feature-card {
+        padding: 20px 16px;
+    }
+
+    /* Dashboard */
+    .dashboard {
+        padding: 20px 12px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .stats-bar {
+        gap: 8px;
+    }
+
+    .stat-item {
+        padding: 10px 12px;
+        min-width: 70px;
+        flex: 1 1 auto;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .group-tabs {
+        gap: 4px;
+    }
+
+    .group-tab {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+    }
+
+    /* Match cards */
+    .match-card {
+        padding: 14px 12px;
+    }
+
+    .match-teams {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .team-info {
+        justify-content: center !important;
+    }
+
+    .score-area {
+        order: -1;
+        min-width: auto;
+    }
+
+    .actual-score {
+        font-size: 1.2rem;
+    }
+
+    .bet-form {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .bet-result-detail {
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+    }
+
+    /* Standings */
+    .standings-page {
+        padding: 20px 12px;
+    }
+
+    .standings-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .standings-table th,
+    .standings-table td {
+        padding: 10px 6px;
+        font-size: 0.8rem;
+    }
+
+    .standings-table .col-rank {
+        width: 32px;
+        font-size: 0.9rem;
+    }
+
+    /* Daily results */
+    .daily-page {
+        padding: 20px 12px;
+    }
+
+    .daily-tables {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    /* My Bets */
+    .my-bets-page {
+        padding: 20px 12px;
+    }
+
+    .my-bets-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .my-bets-table thead {
+        display: none;
+    }
+
+    .my-bets-table tbody tr {
+        display: block;
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--gray-200);
+        position: relative;
+    }
+
+    .my-bets-table td {
+        display: block;
+        padding: 4px 0;
+        border: none;
+        text-align: left;
+    }
+
+    .my-bets-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .my-bets-table td.bet-match-cell::before {
+        display: none;
+    }
+
+    .bet-match-cell {
+        border-bottom: 1px solid var(--gray-100) !important;
+        padding-bottom: 8px !important;
+    }
+
+    .bet-result-cell,
+    .bet-pts-cell {
+        display: inline-block !important;
+        width: 50%;
+        vertical-align: top;
+    }
+
+    .bet-pred-cell,
+    .bet-ou-cell {
+        display: inline-block !important;
+        width: 50%;
+        vertical-align: top;
+    }
+
+    .bet-date-cell {
+        display: inline-block !important;
+        width: 50%;
+    }
+
+    /* Admin */
+    .admin-page {
+        padding: 20px 12px;
+    }
+
+    .admin-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .admin-stat-card {
+        padding: 16px;
+    }
+
+    .admin-stat-value {
+        font-size: 1.5rem;
+    }
+
+    .admin-action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-admin {
+        width: 100%;
+        text-align: center;
+    }
+
+    .match-edit-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Users table */
+    .users-table th,
+    .users-table td {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+
+    /* Modals */
+    .modal {
+        padding: 10px;
+    }
+
+    .modal-content {
+        padding: 20px 16px;
+        max-width: 100%;
+        border-radius: var(--radius-sm);
+    }
+
+    .modal h2 {
+        font-size: 1.1rem;
+    }
+
+    .modal-inputs .score-input {
+        width: 56px;
+        height: 44px;
+    }
+
+    .ou-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        min-width: 80px;
+    }
+
+    /* Auth */
+    .auth-container {
+        margin: 24px auto;
+        padding: 0 12px;
+    }
+
+    .auth-card {
+        padding: 24px 20px;
+    }
+
+    /* Group standings */
+    .groups-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 20px 12px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Small phone */
+@media (max-width: 480px) {
+    .nav-logo .logo-text {
+        font-size: 0.9rem;
+    }
+
+    .nav-link {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+    }
+
+    .match-card {
+        padding: 12px 10px;
+    }
+
+    .match-info {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .score-input {
+        width: 36px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+
+    .btn-bet {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .team-name {
+        font-size: 0.85rem;
+    }
+
+    .team-flag {
+        width: 22px;
+        height: 16px;
+    }
+
+    .stats-bar {
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        min-width: 60px;
+        padding: 8px 10px;
+    }
+
+    .stat-value {
+        font-size: 1rem;
+    }
+
+    .group-tab {
+        padding: 5px 8px;
+        font-size: 0.72rem;
+    }
+
+    .my-bets-table tbody tr {
+        padding: 10px 8px;
+    }
+
+    .pts-total {
+        font-size: 1rem;
+    }
+
+    .pts-detail {
+        font-size: 0.65rem;
+    }
+}
+
+/* ========================================
+   Group Standings Grid
+   ======================================== */
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.group-card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.group-card h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--gray-800);
+    border-bottom: 2px solid var(--gray-100);
+    padding-bottom: 8px;
+}
+
+.group-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.group-card th {
+    text-align: left;
+    padding: 6px 4px;
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+}
+
+.group-card td {
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--gray-50);
+}
+
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+    max-width: 360px;
+}
+
+.toast-success { background: var(--secondary); }
+.toast-error { background: var(--danger); }
+.toast-info { background: var(--primary); }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}

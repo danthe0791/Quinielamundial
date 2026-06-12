@@ -198,6 +198,21 @@ def logout():
     return resp
 
 
+# ─── My Bets ─────────────────────────────────────────────
+@app.get("/my-bets", response_class=HTMLResponse)
+def my_bets(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    bets = db.query(Bet).filter(Bet.user_id == user.id).join(Match).order_by(Match.match_date_utc).all()
+    user_stats = get_user_stats(db, user.id)
+
+    return templates.TemplateResponse("my_bets.html", {
+        "request": request, "user": user, "bets": bets, "stats": user_stats,
+    })
+
+
 # ─── Dashboard ───────────────────────────────────────────
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db)):
