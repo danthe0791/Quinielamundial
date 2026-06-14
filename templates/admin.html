@@ -112,25 +112,25 @@
                         <div class="edit-field">
                             <label>Marcador</label>
                             <div class="edit-inputs">
-                                <input type="number" name="home_score" class="score-input" value="{{ m.home_score or '' }}" placeholder="L" min="0">
+                                <input type="number" name="home_score" class="score-input" value="{{ m.home_score if m.home_score is not none else '' }}" placeholder="L" min="0">
                                 <span>-</span>
-                                <input type="number" name="away_score" class="score-input" value="{{ m.away_score or '' }}" placeholder="V" min="0">
+                                <input type="number" name="away_score" class="score-input" value="{{ m.away_score if m.away_score is not none else '' }}" placeholder="V" min="0">
                             </div>
                         </div>
                         <div class="edit-field">
                             <label>🟨 Tarjetas (real)</label>
                             <div class="edit-inputs">
-                                <input type="number" name="home_cards" class="score-input" value="{{ m.home_cards or '' }}" placeholder="L" min="0">
+                                <input type="number" name="home_cards" class="score-input" value="{{ m.home_cards if m.home_cards is not none else '' }}" placeholder="L" min="0">
                                 <span>-</span>
-                                <input type="number" name="away_cards" class="score-input" value="{{ m.away_cards or '' }}" placeholder="V" min="0">
+                                <input type="number" name="away_cards" class="score-input" value="{{ m.away_cards if m.away_cards is not none else '' }}" placeholder="V" min="0">
                             </div>
                         </div>
                         <div class="edit-field">
                             <label>🚩 Corners (real)</label>
                             <div class="edit-inputs">
-                                <input type="number" name="home_corners" class="score-input" value="{{ m.home_corners or '' }}" placeholder="L" min="0">
+                                <input type="number" name="home_corners" class="score-input" value="{{ m.home_corners if m.home_corners is not none else '' }}" placeholder="L" min="0">
                                 <span>-</span>
-                                <input type="number" name="away_corners" class="score-input" value="{{ m.away_corners or '' }}" placeholder="V" min="0">
+                                <input type="number" name="away_corners" class="score-input" value="{{ m.away_corners if m.away_corners is not none else '' }}" placeholder="V" min="0">
                             </div>
                         </div>
                         <div class="edit-field">

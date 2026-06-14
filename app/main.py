@@ -505,15 +505,15 @@ def admin_delete_user(request: Request, user_id: int = Form(...), db: Session = 
 @app.post("/admin/update-match-stats")
 def admin_update_match(
     request: Request, match_id: int = Form(...),
-    home_score: Optional[int] = Form(None),
-    away_score: Optional[int] = Form(None),
-    home_cards: Optional[int] = Form(None),
-    away_cards: Optional[int] = Form(None),
-    home_corners: Optional[int] = Form(None),
-    away_corners: Optional[int] = Form(None),
-    cards_line: Optional[str] = Form(None),
-    corners_line: Optional[str] = Form(None),
-    is_finished: bool = Form(False),
+    home_score: str = Form(""),
+    away_score: str = Form(""),
+    home_cards: str = Form(""),
+    away_cards: str = Form(""),
+    home_corners: str = Form(""),
+    away_corners: str = Form(""),
+    cards_line: str = Form(""),
+    corners_line: str = Form(""),
+    is_finished: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
@@ -524,23 +524,42 @@ def admin_update_match(
     if not match:
         return JSONResponse({"error": "No encontrado"}, status_code=404)
 
-    def to_float(v):
-        if v is None or v == "":
+    def to_int(v: str):
+        """Convert form string to int, empty → None."""
+        v = v.strip() if v else ""
+        if v == "":
+            return None
+        try: return int(v)
+        except: return None
+
+    def to_float(v: str):
+        """Convert form string to float, empty → None."""
+        v = v.strip() if v else ""
+        if v == "":
             return None
         try: return float(v)
         except: return None
 
-    if home_score is not None: match.home_score = home_score
-    if away_score is not None: match.away_score = away_score
-    if home_cards is not None: match.home_cards = home_cards
-    if away_cards is not None: match.away_cards = away_cards
-    if home_corners is not None: match.home_corners = home_corners
-    if away_corners is not None: match.away_corners = away_corners
+    hs = to_int(home_score)
+    aws = to_int(away_score)
+    hc = to_int(home_cards)
+    awc = to_int(away_cards)
+    hco = to_int(home_corners)
+    awco = to_int(away_corners)
+
+    if hs is not None: match.home_score = hs
+    if aws is not None: match.away_score = aws
+    if hc is not None: match.home_cards = hc
+    if awc is not None: match.away_cards = awc
+    if hco is not None: match.home_corners = hco
+    if awco is not None: match.away_corners = awco
+
     cl = to_float(cards_line)
     if cl is not None: match.cards_line = cl
-    cl = to_float(corners_line)
-    if cl is not None: match.corners_line = cl
-    match.is_finished = is_finished
+    crl = to_float(corners_line)
+    if crl is not None: match.corners_line = crl
+
+    match.is_finished = (is_finished.strip().lower() == "true")
     match.last_updated = datetime.utcnow()
     db.commit()
 
