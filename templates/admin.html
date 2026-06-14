@@ -45,7 +45,7 @@
         <h2>Configuración</h2>
         <div class="setting-row">
             <label>Mínimo de participantes para apostar:</label>
-            <form method="POST" action="/admin/set-min-participants" class="inline-form" onsubmit="return setMinParticipants(this)">
+            <form method="POST" action="/admin/set-min-participants" class="inline-form" onsubmit="setMinParticipants(this); return false;">
                 <input type="number" name="value" value="{{ min_participants }}" min="0" max="10" class="score-input" style="width:70px">
                 <button type="submit" class="btn-admin">Guardar</button>
             </form>
@@ -106,7 +106,7 @@
                         {{ 'Finalizado' if m.is_finished else 'Pendiente' }}
                     </span>
                 </div>
-                <form class="match-edit-form" onsubmit="return updateMatchStats(this)">
+                <form class="match-edit-form" onsubmit="updateMatchStats(this); return false;">
                     <input type="hidden" name="match_id" value="{{ m.id }}">
                     <div class="match-edit-row">
                         <div class="edit-field">
@@ -253,22 +253,36 @@ async function setMinParticipants(form) {
             ? '<div class="alert alert-success">✅ Configuración guardada</div>'
             : `<div class="alert alert-error">❌ ${result.error}</div>`;
     } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
-    return false;
 }
 
 async function updateMatchStats(form) {
     const msg = document.getElementById('admin-message');
+    const btn = form.querySelector('button[type="submit"]');
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Guardando...';
+    
     const data = new FormData(form);
     // If checkbox unchecked, don't send it
     if (!data.get('is_finished')) data.delete('is_finished');
+    
     try {
         const resp = await fetch('/admin/update-match-stats', { method: 'POST', body: data });
         const result = await resp.json();
-        msg.innerHTML = result.success
-            ? '<div class="alert alert-success">✅ Partido actualizado</div>'
-            : `<div class="alert alert-error">❌ ${result.error}</div>`;
-    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
-    return false;
+        if (result.success) {
+            msg.innerHTML = '<div class="alert alert-success">✅ Partido actualizado</div>';
+            // Reload after short delay so user sees the success
+            setTimeout(() => location.reload(), 800);
+        } else {
+            msg.innerHTML = `<div class="alert alert-error">❌ ${result.error}</div>`;
+            btn.disabled = false;
+            btn.textContent = origText;
+        }
+    } catch(e) {
+        msg.innerHTML = '<div class="alert alert-error">❌ Error de conexión</div>';
+        btn.disabled = false;
+        btn.textContent = origText;
+    }
 }
 </script>
 {% endblock %}
