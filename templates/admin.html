@@ -45,9 +45,9 @@
         <h2>Configuración</h2>
         <div class="setting-row">
             <label>Mínimo de participantes para apostar:</label>
-            <form method="POST" action="/admin/set-min-participants" class="inline-form" onsubmit="setMinParticipants(this); return false;">
+            <form method="POST" action="/admin/set-min-participants" class="inline-form" onsubmit="return false;">
                 <input type="number" name="value" value="{{ min_participants }}" min="0" max="10" class="score-input" style="width:70px">
-                <button type="submit" class="btn-admin">Guardar</button>
+                <button type="button" class="btn-admin" onclick="setMinParticipants(this)">Guardar</button>
             </form>
         </div>
     </div>
@@ -106,7 +106,7 @@
                         {{ 'Finalizado' if m.is_finished else 'Pendiente' }}
                     </span>
                 </div>
-                <form class="match-edit-form" onsubmit="updateMatchStats(this); return false;">
+                <form class="match-edit-form" onsubmit="return false;">
                     <input type="hidden" name="match_id" value="{{ m.id }}">
                     <div class="match-edit-row">
                         <div class="edit-field">
@@ -146,7 +146,7 @@
                         <input type="checkbox" name="is_finished" value="true" {% if m.is_finished %}checked{% endif %}>
                         Finalizado
                     </label>
-                    <button type="submit" class="btn-admin" style="margin-top:8px">Actualizar</button>
+                    <button type="button" class="btn-admin" style="margin-top:8px" onclick="updateMatchStats(this)">Actualizar</button>
                 </form>
             </div>
             {% endfor %}
@@ -243,43 +243,67 @@ async function closeDay() {
     } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
 }
 
-async function setMinParticipants(form) {
-    const msg = document.getElementById('admin-message');
-    const data = new FormData(form);
+async function setMinParticipants(btn) {
+    var msg = document.getElementById('admin-message');
+    var form = btn.closest('form');
+    var data = new FormData(form);
     try {
-        const resp = await fetch('/admin/set-min-participants', { method: 'POST', body: data });
-        const result = await resp.json();
+        var resp = await fetch('/admin/set-min-participants', { method: 'POST', body: data });
+        var result = await resp.json();
         msg.innerHTML = result.success
             ? '<div class="alert alert-success">✅ Configuración guardada</div>'
-            : `<div class="alert alert-error">❌ ${result.error}</div>`;
+            : '<div class="alert alert-error">❌ ' + (result.error || 'Error') + '</div>';
     } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
 }
 
-async function updateMatchStats(form) {
-    const msg = document.getElementById('admin-message');
-    const btn = form.querySelector('button[type="submit"]');
-    const origText = btn.textContent;
+async function updateMatchStats(btn) {
+    var msg = document.getElementById('admin-message');
+    var form = btn.closest('form');
+    if (!form) { msg.innerHTML = '<div class="alert alert-error">❌ Error: formulario no encontrado</div>'; return; }
+    
+    var origText = btn.textContent;
     btn.disabled = true;
     btn.textContent = '⏳ Guardando...';
+    msg.innerHTML = '';
     
-    const data = new FormData(form);
-    // If checkbox unchecked, don't send it
+    var data = new FormData(form);
+    // If checkbox unchecked, remove it so it's not sent as empty
     if (!data.get('is_finished')) data.delete('is_finished');
     
+    // Debug: log what we're sending
+    var debugInfo = {};
+    for (var pair of data.entries()) { debugInfo[pair[0]] = pair[1]; }
+    console.log('Enviando:', debugInfo);
+    
     try {
-        const resp = await fetch('/admin/update-match-stats', { method: 'POST', body: data });
-        const result = await resp.json();
+        var resp = await fetch('/admin/update-match-stats', { method: 'POST', body: data });
+        var text = await resp.text();
+        console.log('Respuesta:', resp.status, text);
+        
+        try {
+            var result = JSON.parse(text);
+        } catch(e) {
+            msg.innerHTML = '<div class="alert alert-error">❌ Respuesta inválida del servidor (status ' + resp.status + ')</div>';
+            btn.disabled = false;
+            btn.textContent = origText;
+            return;
+        }
+        
         if (result.success) {
             msg.innerHTML = '<div class="alert alert-success">✅ Partido actualizado</div>';
-            // Reload after short delay so user sees the success
-            setTimeout(() => location.reload(), 800);
+            // Scroll to message on mobile
+            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(function() { location.reload(); }, 1000);
         } else {
-            msg.innerHTML = `<div class="alert alert-error">❌ ${result.error}</div>`;
+            msg.innerHTML = '<div class="alert alert-error">❌ ' + (result.error || 'Error desconocido') + '</div>';
+            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
             btn.disabled = false;
             btn.textContent = origText;
         }
     } catch(e) {
-        msg.innerHTML = '<div class="alert alert-error">❌ Error de conexión</div>';
+        console.error('Error:', e);
+        msg.innerHTML = '<div class="alert alert-error">❌ Error de conexión: ' + e.message + '</div>';
+        msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         btn.disabled = false;
         btn.textContent = origText;
     }
