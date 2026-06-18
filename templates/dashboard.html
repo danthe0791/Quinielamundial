@@ -200,12 +200,12 @@
                 <div class="modal-inputs">
                     <div class="modal-team-input">
                         <label id="modalHomeLabel">Local</label>
-                        <input type="number" id="modalHomeScore" class="score-input" min="0" max="99" placeholder="0">
+                        <input type="number" id="modalHomeScore" class="score-input" min="0" max="99" placeholder="0" oninput="autoDetectBoth()">
                     </div>
                     <span class="score-dash">-</span>
                     <div class="modal-team-input">
                         <label id="modalAwayLabel">Visita</label>
-                        <input type="number" id="modalAwayScore" class="score-input" min="0" max="99" placeholder="0">
+                        <input type="number" id="modalAwayScore" class="score-input" min="0" max="99" placeholder="0" oninput="autoDetectBoth()">
                     </div>
                 </div>
             </div>
@@ -275,16 +275,32 @@ function openBetModal(button) {
     document.getElementById('modalBothScore').value = '';
     document.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
 
+    // Auto-detectar "Ambos Anotan" según los goles
+    autoDetectBoth();
+
     document.getElementById('betModal').classList.add('show');
+}
+
+function autoDetectBoth() {
+    const home = parseInt(document.getElementById('modalHomeScore').value) || 0;
+    const away = parseInt(document.getElementById('modalAwayScore').value) || 0;
+    // Solo auto-detectar si ambos scores están puestos
+    if (home > 0 || away > 0) {
+        const both = (home > 0 && away > 0);
+        selectOU('both', both);
+    }
 }
 
 function selectOU(type, value) {
     const selector = document.getElementById(type + 'Selector');
-    const hidden = document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1) + 'Over');
+    // Map hidden input names: cards → modalCardsOver, both → modalBothScore
+    const hiddenId = type === 'both' ? 'modalBothScore' 
+        : 'modal' + type.charAt(0).toUpperCase() + type.slice(1) + 'Over';
+    const hidden = document.getElementById(hiddenId);
     selector.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
-    const btn = selector.querySelector('.ou-' + (value ? 'over' : 'under'));
+    const btn = selector.querySelector(value ? '.ou-over' : '.ou-under');
     if (btn) btn.classList.add('active');
-    hidden.value = value ? 'over' : 'under';
+    hidden.value = value ? (type === 'both' ? 'si' : 'over') : (type === 'both' ? 'no' : 'under');
 }
 
 function closeBetModal() {
