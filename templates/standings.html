@@ -21,6 +21,7 @@
                         <th class="col-exact">Exactos</th>
                         <th class="col-exact">Tarjetas</th>
                         <th class="col-exact">Corners</th>
+                        <th class="col-exact">Ambos</th>
                         <th class="col-bets">Pronósticos</th>
                     </tr>
                 </thead>
@@ -42,6 +43,7 @@
                         <td class="col-exact">{{ s.exact_scores }}</td>
                         <td class="col-exact">{{ s.correct_cards }}</td>
                         <td class="col-exact">{{ s.correct_corners }}</td>
+                        <td class="col-exact">{{ s.correct_both }}</td>
                         <td class="col-bets">{{ s.total_bets }}</td>
                     </tr>
                     {% endfor %}

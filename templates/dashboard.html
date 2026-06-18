@@ -29,6 +29,10 @@
                 <span class="stat-label">Corners</span>
             </div>
             <div class="stat-item">
+                <span class="stat-value">{{ stats.both_correct or 0 }}</span>
+                <span class="stat-label">Ambos Anotan</span>
+            </div>
+            <div class="stat-item">
                 <span class="stat-value">{{ stats.accuracy }}%</span>
                 <span class="stat-label">Precisión</span>
             </div>
@@ -163,11 +167,13 @@
             {% if bet and match.is_finished %}
             <div class="bet-result-detail">
                 <span class="result-label">Tu apuesta: {{ bet.home_score_pred }}-{{ bet.away_score_pred }}
-                    {% if bet.cards_over is not none %} 🟨{{ bet.cards_over and 'Over' or 'Under' }}{% endif %}
-                    {% if bet.corners_over is not none %} 🚩{{ bet.corners_over and 'Over' or 'Under' }}{% endif %}
+                    {% if bet.both_score is not none %} ⚽ Ambos: {{ 'Sí' if bet.both_score else 'No' }}{% endif %}
+                    {% if bet.cards_over is not none %} 🟨{{ 'Over' if bet.cards_over else 'Under' }}{% endif %}
+                    {% if bet.corners_over is not none %} 🚩{{ 'Over' if bet.corners_over else 'Under' }}{% endif %}
                 </span>
                 <span class="result-points">
                     Marcador: +{{ bet.points_result }}+{{ bet.points_score }} |
+                    Ambos: +{{ bet.points_both_score }} |
                     Tarjetas: +{{ bet.points_cards }} |
                     Corners: +{{ bet.points_corners }}
                 </span>
@@ -219,6 +225,14 @@
                 </div>
                 <input type="hidden" id="modalCornersOver" value="">
             </div>
+            <div class="modal-section">
+                <h3>⚽ Ambos Anotan <span class="line-info">(los 2 equipos marcan gol)</span></h3>
+                <div class="ou-selector" id="bothSelector">
+                    <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('both', true)">Sí</button>
+                    <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('both', false)">No</button>
+                </div>
+                <input type="hidden" id="modalBothScore" value="">
+            </div>
             <div class="modal-actions">
                 <button type="button" class="btn-primary btn-full" onclick="submitBetModal()">Guardar Apuesta</button>
             </div>
@@ -258,6 +272,7 @@ function openBetModal(button) {
     document.getElementById('modalAwayScore').value = awayInput.value || '';
     document.getElementById('modalCardsOver').value = '';
     document.getElementById('modalCornersOver').value = '';
+    document.getElementById('modalBothScore').value = '';
     document.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
 
     document.getElementById('betModal').classList.add('show');
@@ -283,6 +298,7 @@ async function submitBetModal() {
     const awayScore = parseInt(document.getElementById('modalAwayScore').value) || 0;
     const cardsOver = document.getElementById('modalCardsOver').value || '';
     const cornersOver = document.getElementById('modalCornersOver').value || '';
+    const bothScore = document.getElementById('modalBothScore').value || '';
 
     if (homeScore < 0 || awayScore < 0) {
         showToast('❌ Marcadores inválidos', 'error');
@@ -295,6 +311,7 @@ async function submitBetModal() {
     formData.append('away_score', awayScore);
     if (cardsOver) formData.append('cards_over', cardsOver);
     if (cornersOver) formData.append('corners_over', cornersOver);
+    if (bothScore) formData.append('both_score', bothScore);
 
     try {
         const resp = await fetch('/api/bet', { method: 'POST', body: formData });
@@ -320,14 +337,14 @@ async function showMatchBets(matchId) {
         if (data.bets && data.bets.length > 0) {
             let html = `<p class="modal-match-title">${data.match}</p>`;
             if (data.home_score !== null) {
-                html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} | 
-                    Tarjetas: Over/Under ${data.cards_line} | Corners: Over/Under ${data.corners_line}</p>`;
+                html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} |                     Ambos anotan: ${(data.home_score > 0 && data.away_score > 0) ? 'Sí' : 'No'} |                    Tarjetas: Over/Under ${data.cards_line} | Corners: Over/Under ${data.corners_line}</p>`;
             }
             if (data.is_admin) {
                 html += `<div class="bets-table-wrapper"><table class="bets-table">
                     <thead><tr>
                         <th>Participante</th>
                         <th>Marcador</th>
+                        <th>Ambos Anotan</th>
                         <th>Tarjetas O/U</th>
                         <th>Corners O/U</th>
                         <th>Pts</th>
@@ -336,6 +353,7 @@ async function showMatchBets(matchId) {
                     html += `<tr>
                         <td><strong>${b.user}</strong></td>
                         <td>${b.home_score ?? '-'}-${b.away_score ?? '-'}</td>
+                        <td>${b.both || '-'}</td>
                         <td>${b.cards || '-'}</td>
                         <td>${b.corners || '-'}</td>
                         <td>${b.points || 0}</td>

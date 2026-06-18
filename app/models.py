@@ -59,10 +59,12 @@ class Bet(Base):
     away_score_pred = Column(Integer, nullable=True)
     cards_over = Column(Boolean, nullable=True)    # True=Over, False=Under
     corners_over = Column(Boolean, nullable=True)  # True=Over, False=Under
+    both_score = Column(Boolean, nullable=True)    # True=Sí, False=No (ambos anotan)
     points_result = Column(Integer, default=0)
     points_score = Column(Integer, default=0)
     points_cards = Column(Integer, default=0)
     points_corners = Column(Integer, default=0)
+    points_both_score = Column(Integer, default=0)
     points_total = Column(Integer, default=0)
     scored_on = Column(Date, nullable=True)     # Date when points were awarded
     created_at = Column(DateTime, default=datetime.utcnow)

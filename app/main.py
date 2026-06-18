@@ -273,6 +273,7 @@ def place_bet(
     away_score: int = Form(...),
     cards_over: Optional[str] = Form(None),
     corners_over: Optional[str] = Form(None),
+    both_score: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
@@ -309,12 +310,14 @@ def place_bet(
         existing_bet.away_score_pred = away_score
         existing_bet.cards_over = parse_bool(cards_over)
         existing_bet.corners_over = parse_bool(corners_over)
+        existing_bet.both_score = parse_bool(both_score)
         existing_bet.updated_at = datetime.utcnow()
     else:
         bet = Bet(
             user_id=user.id, match_id=match_id,
             home_score_pred=home_score, away_score_pred=away_score,
             cards_over=parse_bool(cards_over), corners_over=parse_bool(corners_over),
+            both_score=parse_bool(both_score),
         )
         db.add(bet)
 
@@ -341,6 +344,7 @@ def match_bets_api(match_id: int, request: Request, db: Session = Depends(get_db
                 "away_score": bet.away_score_pred,
                 "cards": "Over" if bet.cards_over is True else ("Under" if bet.cards_over is False else "-"),
                 "corners": "Over" if bet.corners_over is True else ("Under" if bet.corners_over is False else "-"),
+                "both": "Sí" if bet.both_score is True else ("No" if bet.both_score is False else "-"),
                 "points": bet.points_total,
             })
         else:

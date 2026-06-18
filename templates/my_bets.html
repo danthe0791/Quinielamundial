@@ -29,6 +29,10 @@
                 <span class="stat-label">Corners</span>
             </div>
             <div class="stat-item">
+                <span class="stat-value">{{ stats.both_correct or 0 }}</span>
+                <span class="stat-label">Ambos Anotan</span>
+            </div>
+            <div class="stat-item">
                 <span class="stat-value">{{ stats.accuracy }}%</span>
                 <span class="stat-label">Precisión</span>
             </div>
@@ -44,6 +48,7 @@
                     <th>Partido</th>
                     <th>Fecha</th>
                     <th>Tu Marcador</th>
+                    <th>⚽ Ambos Anotan</th>
                     <th>🟨 Tarjetas</th>
                     <th>🚩 Corners</th>
                     <th>Resultado</th>
@@ -90,6 +95,15 @@
                         <span class="bet-pred-score">{{ bet.home_score_pred or '?' }} - {{ bet.away_score_pred or '?' }}</span>
                     </td>
                     <td class="bet-ou-cell">
+                        {% if bet.both_score is not none %}
+                        <span class="ou-pred {{ 'ou-over-pred' if bet.both_score else 'ou-under-pred' }}">
+                            {{ 'Sí' if bet.both_score else 'No' }}
+                        </span>
+                        {% else %}
+                        <span class="ou-none">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="bet-ou-cell">
                         {% if bet.cards_over is not none %}
                         <span class="ou-pred {{ 'ou-over-pred' if bet.cards_over else 'ou-under-pred' }}">
                             {{ 'Over' if bet.cards_over else 'Under' }}
@@ -114,6 +128,7 @@
                         <div class="bet-actual">
                             <span class="bet-actual-score">{{ bet.match.home_score }} - {{ bet.match.away_score }}</span>
                             <div class="bet-extra-detail">
+                                <span>⚽ Ambos: {{ 'Sí' if bet.match.home_score > 0 and bet.match.away_score > 0 else 'No' }}</span>
                                 <span>🟨 {{ bet.match.home_cards or 0 }}-{{ bet.match.away_cards or 0 }}</span>
                                 <span>🚩 {{ bet.match.home_corners or 0 }}-{{ bet.match.away_corners or 0 }}</span>
                             </div>
@@ -126,8 +141,8 @@
                         {% if bet.match.is_finished %}
                         <div class="pts-breakdown">
                             <span class="pts-total">{% if bet.points_total > 0 %}+{% endif %}{{ bet.points_total }}</span>
-                            <span class="pts-detail" title="Resultado: {{ bet.points_result }} | Exacto: {{ bet.points_score }} | Tarjetas: {{ bet.points_cards }} | Corners: {{ bet.points_corners }}">
-                                M:{{ bet.points_result }}+E:{{ bet.points_score }} T:{{ bet.points_cards }} C:{{ bet.points_corners }}
+                            <span class="pts-detail" title="Resultado: {{ bet.points_result }} | Exacto: {{ bet.points_score }} | Ambos: {{ bet.points_both_score }} | Tarjetas: {{ bet.points_cards }} | Corners: {{ bet.points_corners }}">
+                                M:{{ bet.points_result }}+E:{{ bet.points_score }} A:{{ bet.points_both_score }} T:{{ bet.points_cards }} C:{{ bet.points_corners }}
                             </span>
                         </div>
                         {% else %}
