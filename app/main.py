@@ -213,6 +213,24 @@ def my_bets(request: Request, db: Session = Depends(get_db)):
     })
 
 
+# ─── Hall of Fame ─────────────────────────────────────────
+@app.get("/hall-of-fame", response_class=HTMLResponse)
+def hall_of_fame(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    # Get bets with 7+ points (perfect or near-perfect)
+    perfect_bets = db.query(Bet, Match, User).join(Match).join(User, Bet.user_id == User.id).filter(
+        Bet.points_total >= 7,
+        Match.is_finished == True,
+    ).order_by(Bet.points_total.desc(), Match.match_date_utc.desc()).all()
+
+    return templates.TemplateResponse("hall_of_fame.html", {
+        "request": request, "user": user, "perfect_bets": perfect_bets,
+    })
+
+
 # ─── Dashboard ───────────────────────────────────────────
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db)):
@@ -294,9 +312,11 @@ def place_bet(
     if home_score < 0 or away_score < 0 or home_score > 99 or away_score > 99:
         return JSONResponse({"error": "Marcador inválido"}, status_code=400)
 
-    # Cards and corners required
-    if cards_over is None or cards_over == "" or corners_over is None or corners_over == "":
-        return JSONResponse({"error": "Tarjetas y corners son obligatorios. Seleccioná Over o Under."}, status_code=400)
+    # Cards, corners, and both_score required
+    if (cards_over is None or cards_over == "" or 
+        corners_over is None or corners_over == "" or
+        both_score is None or both_score == ""):
+        return JSONResponse({"error": "Tarjetas, corners y Ambos Anotan son obligatorios."}, status_code=400)
 
     def parse_bool(v):
         if v is None or v == "":

@@ -188,10 +188,16 @@ async def sync_matches_from_api(db: Session) -> int:
                 for key, value in match_data.items():
                     setattr(existing, key, value)
             elif not is_finished:
-                # Update just metadata
-                existing.group_name = group_name
+                # Update metadata AND dates (important for rescheduled matches)
+                existing.match_date = match_date
+                existing.match_date_utc = match_date_utc
+                existing.group_name = match_data["group_name"]
                 existing.group_order = group_order
                 existing.stage = map_group_to_stage(group_name)
+                existing.home_team = match_data["home_team"]
+                existing.away_team = match_data["away_team"]
+                existing.home_icon = match_data["home_icon"]
+                existing.away_icon = match_data["away_icon"]
                 existing.last_updated = datetime.utcnow()
         else:
             db.add(Match(**match_data))
