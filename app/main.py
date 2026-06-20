@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func
 import os
 
 from .database import init_db, get_db, SessionLocal
@@ -223,9 +224,9 @@ def hall_of_fame(request: Request, db: Session = Depends(get_db)):
     # Get 8-point bets (perfect) + Malas69's 7-point achievements
     perfect_bets = db.query(Bet, Match, User).join(Match).join(User, Bet.user_id == User.id).filter(
         Match.is_finished == True,
-        db.or_(
+        or_(
             Bet.points_total >= 8,
-            db.and_(Bet.points_total == 7, User.id == 11)  # Malas69 exception
+            (Bet.points_total == 7) & (User.id == 11)  # Malas69 exception
         )
     ).order_by(Bet.points_total.desc(), Match.match_date_utc.desc()).all()
 
@@ -275,7 +276,6 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         bets_by_match.setdefault(bet.match_id, []).append({"bet": bet, "user": usr})
 
     # Deduplicate groups by group_order (ignore minor name variations)
-    from sqlalchemy import func
     groups = db.query(
         func.min(Match.group_name).label('group_name'),
         Match.group_order,
