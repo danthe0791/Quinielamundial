@@ -221,12 +221,12 @@ def hall_of_fame(request: Request, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    # Get 8-point bets (perfect) + Malas69's 7-point achievements
+    # Get 8-point bets + Malas69's specific 7-point achievement (Rep. Checa vs Sudáfrica)
     perfect_bets = db.query(Bet, Match, User).join(Match).join(User, Bet.user_id == User.id).filter(
         Match.is_finished == True,
         or_(
             Bet.points_total >= 8,
-            (Bet.points_total == 7) & (User.id == 11)  # Malas69 exception
+            Bet.id == 194  # Only this specific 7pt bet from Malas69
         )
     ).order_by(Bet.points_total.desc(), Match.match_date_utc.desc()).all()
 
