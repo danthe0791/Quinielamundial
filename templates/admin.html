@@ -97,6 +97,10 @@
     <div class="admin-actions">
         <h2>Actualizar Estadísticas de Partidos</h2>
         <p class="standings-subtitle">Ingresa los resultados reales (marcador, tarjetas, corners)</p>
+        <div class="group-tabs" style="margin-bottom:16px">
+            <a href="/admin" class="group-tab {% if not request.query_params.get('today') %}active{% endif %}">Todos</a>
+            <a href="/admin?today=1" class="group-tab {% if request.query_params.get('today') %}active{% endif %}">📅 Hoy</a>
+        </div>
         <div class="match-edit-grid">
             {% for m in matches %}
             <div class="match-edit-card">

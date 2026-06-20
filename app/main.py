@@ -220,10 +220,13 @@ def hall_of_fame(request: Request, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    # Get bets with 7+ points (perfect or near-perfect)
+    # Get 8-point bets (perfect) + Malas69's 7-point achievements
     perfect_bets = db.query(Bet, Match, User).join(Match).join(User, Bet.user_id == User.id).filter(
-        Bet.points_total >= 7,
         Match.is_finished == True,
+        db.or_(
+            Bet.points_total >= 8,
+            db.and_(Bet.points_total == 7, User.id == 11)  # Malas69 exception
+        )
     ).order_by(Bet.points_total.desc(), Match.match_date_utc.desc()).all()
 
     return templates.TemplateResponse("hall_of_fame.html", {
@@ -244,12 +247,13 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     matches_query = db.query(Match).order_by(Match.group_order, Match.match_date_utc)
 
     if show_today:
-        # Filter matches happening today in CST (UTC-6)
-        # Today CST = from 06:00 UTC today to 06:00 UTC tomorrow
+        # Today in CST (UTC-6): matches from today 00:00 CST to tomorrow 00:00 CST
+        # CST midnight = UTC+6 same day (e.g., 00:00 CST Jun 19 = 06:00 UTC Jun 19)
+        # End: 00:00 CST next day = 06:00 UTC next day
         utc_now = datetime.utcnow()
-        today_start_cst = utc_now.replace(hour=0, minute=0, second=0, microsecond=0)
-        # Shift: CST midnight = 06:00 UTC same day
-        today_start_utc = today_start_cst + timedelta(hours=6)
+        cst_now = utc_now - timedelta(hours=6)  # Convert UTC to CST
+        cst_midnight = cst_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start_utc = cst_midnight + timedelta(hours=6)  # CST midnight → UTC
         today_end_utc = today_start_utc + timedelta(days=1)
         matches_query = matches_query.filter(
             Match.match_date_utc >= today_start_utc,
@@ -270,7 +274,13 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     for bet, usr in all_bets_q:
         bets_by_match.setdefault(bet.match_id, []).append({"bet": bet, "user": usr})
 
-    groups = db.query(Match.group_name, Match.group_order, Match.stage).distinct().order_by(Match.group_order).all()
+    # Deduplicate groups by group_order (ignore minor name variations)
+    from sqlalchemy import func
+    groups = db.query(
+        func.min(Match.group_name).label('group_name'),
+        Match.group_order,
+        func.min(Match.stage).label('stage')
+    ).group_by(Match.group_order).order_by(Match.group_order).all()
     user_stats = get_user_stats(db, user.id)
     min_part = int(get_settings_value(db, "min_participants", "1"))
 
@@ -462,13 +472,28 @@ def admin_page(request: Request, db: Session = Depends(get_db)):
     if not user or not user.is_admin:
         return RedirectResponse(url="/dashboard", status_code=302)
 
+    show_today = request.query_params.get("today", None)
+
     users = db.query(User).all()
     match_count = db.query(Match).count()
     finished = db.query(Match).filter(Match.is_finished == True).count()
     total_bets = db.query(Bet).count()
     min_part = get_settings_value(db, "min_participants", "1")
     closures = db.query(DailyClosure).order_by(DailyClosure.closure_date.desc()).limit(10).all()
-    matches = db.query(Match).order_by(Match.match_date_utc).all()
+
+    matches_query = db.query(Match).order_by(Match.match_date_utc)
+    if show_today:
+        # Same CST today logic as dashboard
+        utc_now = datetime.utcnow()
+        cst_now = utc_now - timedelta(hours=6)
+        cst_midnight = cst_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start_utc = cst_midnight + timedelta(hours=6)
+        today_end_utc = today_start_utc + timedelta(days=1)
+        matches_query = matches_query.filter(
+            Match.match_date_utc >= today_start_utc,
+            Match.match_date_utc < today_end_utc,
+        )
+    matches = matches_query.all()
 
     return templates.TemplateResponse("admin.html", {
         "request": request, "user": user, "users": users,
