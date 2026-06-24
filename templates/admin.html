@@ -35,6 +35,7 @@
             <button onclick="closeDay()" class="btn-admin">📅 Cerrar Día (tabla general)</button>
             <button onclick="seedFriendlies()" class="btn-admin">🧪 Crear Amistosos (hoy/mañana)</button>
             <button onclick="resetAllData()" class="btn-admin btn-danger">🗑️ Reset Total (iniciar mundial)</button>
+            <button onclick="closeStage()" class="btn-admin" style="border-color:var(--accent);color:#b8860b">🔒 Cerrar Fase y Reiniciar Puntos</button>
             <a href="/admin/backup" class="btn-admin" download>💾 Backup DB</a>
         </div>
         <div id="admin-message" class="admin-message"></div>
@@ -200,6 +201,20 @@ async function resetAllData() {
             ? `<div class="alert alert-success">${data.message}</div>`
             : `<div class="alert alert-error">❌ ${data.error}</div>`;
         if (data.success) setTimeout(() => location.reload(), 2000);
+    } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
+}
+
+async function closeStage() {
+    const msg = document.getElementById('admin-message');
+    if (!confirm('🔒 ¿Cerrar la fase actual? Se guardará el historial de posiciones y los puntos se reiniciarán a 0 para la siguiente ronda.')) return;
+    msg.innerHTML = '<div class="alert alert-info">Cerrando fase...</div>';
+    try {
+        const resp = await fetch('/admin/close-stage', { method: 'POST' });
+        const data = await resp.json();
+        msg.innerHTML = data.success
+            ? `<div class="alert alert-success">✅ ${data.message}</div>`
+            : `<div class="alert alert-error">❌ ${data.error}</div>`;
+        if (data.success) setTimeout(() => location.reload(), 1500);
     } catch(e) { msg.innerHTML = '<div class="alert alert-error">❌ Error</div>'; }
 }
 

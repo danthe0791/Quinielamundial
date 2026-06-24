@@ -13,7 +13,7 @@ from sqlalchemy import or_, func
 import os
 
 from .database import init_db, get_db, SessionLocal
-from .models import User, Match, Bet, DailyClosure, AppSettings
+from .models import User, Match, Bet, DailyClosure, AppSettings, StageHistory
 # Try RapidAPI first, fallback to OpenLigaDB
 try:
     from .rapidapi import sync_matches_from_api, fetch_group_standings
@@ -232,6 +232,32 @@ def hall_of_fame(request: Request, db: Session = Depends(get_db)):
 
     return templates.TemplateResponse("hall_of_fame.html", {
         "request": request, "user": user, "perfect_bets": perfect_bets,
+    })
+
+
+# ─── Stage History ─────────────────────────────────────
+@app.get("/stage-history", response_class=HTMLResponse)
+def stage_history_page(request: Request, db: Session = Depends(get_db)):
+    import json
+    user = get_current_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    stages = db.query(StageHistory).order_by(StageHistory.closed_at.desc()).all()
+    stages_data = []
+    for s in stages:
+        try:
+            standings = json.loads(s.standings_json)
+        except:
+            standings = []
+        stages_data.append({
+            "name": s.stage_name,
+            "date": s.closed_at,
+            "standings": standings,
+        })
+
+    return templates.TemplateResponse("stage_history.html", {
+        "request": request, "user": user, "stages": stages_data,
     })
 
 
@@ -684,6 +710,45 @@ def admin_reset_all(request: Request, db: Session = Depends(get_db)):
         return JSONResponse({"success": True, "message": "✅ Todos los datos eliminados. Mundial sincronizado desde 0."})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/admin/close-stage")
+def admin_close_stage(request: Request, db: Session = Depends(get_db)):
+    """Close current stage: save standings to history and reset all points."""
+    import json
+    user = get_current_user(request, db)
+    if not user or not user.is_admin:
+        return JSONResponse({"error": "No autorizado"}, status_code=401)
+
+    # Get current standings
+    standings = get_user_standings(db)
+    standings_json = json.dumps(standings, default=str)
+
+    # Get stage name
+    count = db.query(StageHistory).count()
+    stage_name = f"Fase {count + 1}"
+
+    # Save to history
+    db.add(StageHistory(
+        stage_name=stage_name,
+        closed_by=user.id,
+        standings_json=standings_json,
+    ))
+    db.commit()
+
+    # Reset all points
+    db.query(Bet).update({
+        Bet.points_result: 0,
+        Bet.points_score: 0,
+        Bet.points_cards: 0,
+        Bet.points_corners: 0,
+        Bet.points_both_score: 0,
+        Bet.points_total: 0,
+        Bet.scored_on: None,
+    })
+    db.commit()
+
+    return JSONResponse({"success": True, "message": f"'{stage_name}' cerrada. Puntos reiniciados para la siguiente ronda."})
 
 
 # ─── Backup / Restore ────────────────────────────────────

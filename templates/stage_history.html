@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Historial de Fases{% endblock %}
+
+{% block content %}
+<div class="standings-page">
+    <div class="standings-header">
+        <h1>📜 Historial de Fases</h1>
+        <p class="standings-subtitle">Posiciones finales de cada fase cerrada</p>
+    </div>
+
+    {% if stages %}
+        {% for stage in stages %}
+        <div class="hof-card" style="background:white; margin-bottom:24px; border:2px solid var(--gray-200); padding:24px">
+            <div class="hof-card-header">
+                <h2 style="font-size:1.2rem;color:var(--gray-800)">{{ stage.name }}</h2>
+                <span style="color:var(--gray-500);font-size:0.85rem">{{ stage.date.strftime('%d/%m/%Y %H:%M') if stage.date else '' }}</span>
+            </div>
+            <div class="standings-table-wrapper">
+                <table class="standings-table">
+                    <thead>
+                        <tr>
+                            <th class="col-rank">#</th>
+                            <th class="col-name">Participante</th>
+                            <th class="col-points">Puntos</th>
+                            <th class="col-results">Aciertos</th>
+                            <th class="col-exact">Exactos</th>
+                            <th class="col-exact">Tarjetas</th>
+                            <th class="col-exact">Corners</th>
+                            <th class="col-exact">Ambos</th>
+                            <th class="col-bets">Pronósticos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in stage.standings %}
+                        <tr>
+                            <td class="col-rank">{{ s.rank }}</td>
+                            <td class="col-name"><span class="participant-name">{{ s.username }}</span></td>
+                            <td class="col-points"><strong>{{ s.total_points }}</strong></td>
+                            <td class="col-results">{{ s.correct_results }}</td>
+                            <td class="col-exact">{{ s.exact_scores }}</td>
+                            <td class="col-exact">{{ s.correct_cards }}</td>
+                            <td class="col-exact">{{ s.correct_corners }}</td>
+                            <td class="col-exact">{{ s.correct_both }}</td>
+                            <td class="col-bets">{{ s.total_bets }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <p>📜 Aún no se ha cerrado ninguna fase</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

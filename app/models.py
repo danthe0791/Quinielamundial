@@ -96,3 +96,13 @@ class AppSettings(Base):
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String(50), unique=True, nullable=False)
     value = Column(Text, nullable=False)
+
+
+class StageHistory(Base):
+    __tablename__ = "stage_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    stage_name = Column(String(100), nullable=False)
+    closed_at = Column(DateTime, default=datetime.utcnow)
+    closed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    standings_json = Column(Text, nullable=False)  # JSON blob of standings
