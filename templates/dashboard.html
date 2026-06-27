@@ -66,7 +66,7 @@
         {% set match_bets = all_bets.get(match.id, []) %}
         {% set match_started = match.match_date_utc and match.match_date_utc < now() %}
         
-        <div class="match-card {% if match.is_finished %}finished{% endif %}" id="match-{{ match.id }}">
+        <div class="match-card {% if match.is_finished %}finished{% endif %}" id="match-{{ match.id }}" data-stage="{{ match.stage }}">
             <div class="match-info">
                 <span class="match-date">
                     {% if match.match_date_utc %}
@@ -225,13 +225,30 @@
                 </div>
                 <input type="hidden" id="modalCornersOver" value="">
             </div>
-            <div class="modal-section">
+            <div class="modal-section" id="bothSection">
                 <h3>⚽ Ambos Anotan <span class="line-info">(los 2 equipos marcan gol)</span></h3>
                 <div class="ou-selector" id="bothSelector">
                     <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('both', true)">Sí</button>
                     <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('both', false)">No</button>
                 </div>
                 <input type="hidden" id="modalBothScore" value="">
+            </div>
+            <!-- KO Stage only: Quién avanza + Penales -->
+            <div class="modal-section" id="koSection1" style="display:none">
+                <h3>🏆 ¿Quién avanza?</h3>
+                <div class="ou-selector" id="advancesSelector">
+                    <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('advances', true)">Local</button>
+                    <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('advances', false)">Visita</button>
+                </div>
+                <input type="hidden" id="modalAdvancesHome" value="">
+            </div>
+            <div class="modal-section" id="koSection2" style="display:none">
+                <h3>🥅 ¿Habrá penales?</h3>
+                <div class="ou-selector" id="penaltiesSelector">
+                    <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('penalties', true)">Sí</button>
+                    <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('penalties', false)">No</button>
+                </div>
+                <input type="hidden" id="modalPenaltiesYes" value="">
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-primary btn-full" onclick="submitBetModal()">Guardar Apuesta</button>
@@ -273,7 +290,15 @@ function openBetModal(button) {
     document.getElementById('modalCardsOver').value = '';
     document.getElementById('modalCornersOver').value = '';
     document.getElementById('modalBothScore').value = '';
+    document.getElementById('modalAdvancesHome').value = '';
+    document.getElementById('modalPenaltiesYes').value = '';
     document.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
+
+    // Show/hide KO fields based on match stage
+    var matchStage = matchCard.dataset.stage || 'Grupos';
+    var isKO = matchStage !== 'Grupos' && matchStage !== 'Amistosos';
+    document.getElementById('koSection1').style.display = isKO ? '' : 'none';
+    document.getElementById('koSection2').style.display = isKO ? '' : 'none';
 
     // Auto-detectar "Ambos Anotan" según los goles
     autoDetectBoth();
@@ -293,14 +318,18 @@ function autoDetectBoth() {
 
 function selectOU(type, value) {
     const selector = document.getElementById(type + 'Selector');
-    // Map hidden input names: cards → modalCardsOver, both → modalBothScore
-    const hiddenId = type === 'both' ? 'modalBothScore' 
-        : 'modal' + type.charAt(0).toUpperCase() + type.slice(1) + 'Over';
+    if (!selector) return;
+    var hiddenId;
+    if (type === 'both') hiddenId = 'modalBothScore';
+    else if (type === 'advances') hiddenId = 'modalAdvancesHome';
+    else if (type === 'penalties') hiddenId = 'modalPenaltiesYes';
+    else hiddenId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1) + 'Over';
     const hidden = document.getElementById(hiddenId);
+    if (!hidden) return;
     selector.querySelectorAll('.ou-btn').forEach(b => b.classList.remove('active'));
     const btn = selector.querySelector(value ? '.ou-over' : '.ou-under');
     if (btn) btn.classList.add('active');
-    hidden.value = value ? (type === 'both' ? 'si' : 'over') : (type === 'both' ? 'no' : 'under');
+    hidden.value = value ? (type === 'both' ? 'si' : (type === 'advances' ? 'local' : (type === 'penalties' ? 'si' : 'over'))) : 'no';
 }
 
 function closeBetModal() {
@@ -315,6 +344,8 @@ async function submitBetModal() {
     const cardsOver = document.getElementById('modalCardsOver').value || '';
     const cornersOver = document.getElementById('modalCornersOver').value || '';
     const bothScore = document.getElementById('modalBothScore').value || '';
+    const advancesHome = document.getElementById('modalAdvancesHome').value || '';
+    const penaltiesYes = document.getElementById('modalPenaltiesYes').value || '';
 
     if (homeScore < 0 || awayScore < 0) {
         showToast('❌ Marcadores inválidos', 'error');
@@ -328,6 +359,8 @@ async function submitBetModal() {
     if (cardsOver) formData.append('cards_over', cardsOver);
     if (cornersOver) formData.append('corners_over', cornersOver);
     if (bothScore) formData.append('both_score', bothScore);
+    if (advancesHome) formData.append('advances_home', advancesHome);
+    if (penaltiesYes) formData.append('penalties_yes', penaltiesYes);
 
     try {
         const resp = await fetch('/api/bet', { method: 'POST', body: formData });

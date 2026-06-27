@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Grandes Ligas{% endblock %}
+
+{% block content %}
+<div class="hof-page">
+    <div class="hof-header">
+        <h1>🌟 Grandes Ligas</h1>
+        <p class="standings-subtitle">Apuestas perfectas de la fase knockout (10 puntos)</p>
+    </div>
+
+    {% if perfect_bets %}
+    <div class="hof-grid">
+        {% for bet, match, usr in perfect_bets %}
+        <div class="hof-card" style="background:linear-gradient(135deg,#c9b8e8 0%,#f3e8ff 100%);border-color:#7c3aed">
+            <div class="hof-card-header">
+                <span class="hof-user">👤 {{ usr.display_name }}</span>
+                <span class="hof-points" style="color:#6d28d9">{% if bet.points_total > 0 %}+{% endif %}{{ bet.points_total }} pts</span>
+            </div>
+            <div class="hof-match">
+                <div class="hof-teams">
+                    <span class="hof-team">
+                        {% if match.home_icon %}<img src="{{ match.home_icon }}" class="hof-flag" loading="lazy" onerror="this.style.display='none'">{% endif %}
+                        {{ match.home_team }}
+                    </span>
+                    <span class="hof-vs">vs</span>
+                    <span class="hof-team">
+                        {{ match.away_team }}
+                        {% if match.away_icon %}<img src="{{ match.away_icon }}" class="hof-flag" loading="lazy" onerror="this.style.display='none'">{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="hof-details">
+                <div class="hof-row">
+                    <span class="hof-label">Resultado real</span>
+                    <span class="hof-value hof-real">{{ match.home_score }} - {{ match.away_score }}</span>
+                </div>
+                <div class="hof-row">
+                    <span class="hof-label">Predicción</span>
+                    <span class="hof-value hof-pred">{{ bet.home_score_pred }} - {{ bet.away_score_pred }}</span>
+                </div>
+                <div class="hof-row">
+                    <span class="hof-label">¿Quién avanza?</span>
+                    <span class="hof-value">
+                        {% set actual_adv = (match.home_score > match.away_score) %}
+                        {{ 'Local' if bet.advances_home else 'Visita' }}
+                        {% if bet.advances_home == actual_adv %}<span class="hof-check">✅</span>{% endif %}
+                        <span class="hof-real-small">(Real: {{ 'Local' if actual_adv else 'Visita' }})</span>
+                    </span>
+                </div>
+                <div class="hof-row">
+                    <span class="hof-label">¿Hubo penales?</span>
+                    <span class="hof-value">
+                        {{ 'Sí' if bet.penalties_yes else 'No' }}
+                        {% if bet.penalties_yes == match.had_penalties %}<span class="hof-check">✅</span>{% endif %}
+                        <span class="hof-real-small">(Real: {{ 'Sí' if match.had_penalties else 'No' }})</span>
+                    </span>
+                </div>
+                <div class="hof-breakdown">
+                    <span class="hof-label">Desglose</span>
+                    <span class="hof-value">
+                        Resultado:+{{ bet.points_result }} Exacto:+{{ bet.points_score }} 
+                        Ambos:+{{ bet.points_both_score }} Tarjetas:+{{ bet.points_cards }} 
+                        Corners:+{{ bet.points_corners }} Avanza:+{{ bet.points_advances }} 
+                        Penales:+{{ bet.points_penalties }}
+                    </span>
+                </div>
+            </div>
+            <div class="hof-date">{{ match.stage }} · {{ format_cst(match.match_date_utc) if match.match_date_utc else '' }} CST</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>🌟 Aún no hay apuestas perfectas en la fase knockout</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

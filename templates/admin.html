@@ -151,6 +151,12 @@
                         <input type="checkbox" name="is_finished" value="true" {% if m.is_finished %}checked{% endif %}>
                         Finalizado
                     </label>
+                    {% if m.stage != 'Grupos' %}
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="had_penalties" value="true" {% if m.had_penalties %}checked{% endif %}>
+                        ¿Hubo penales?
+                    </label>
+                    {% endif %}
                     <button type="button" class="btn-admin" style="margin-top:8px" onclick="updateMatchStats(this)">Actualizar</button>
                 </form>
             </div>

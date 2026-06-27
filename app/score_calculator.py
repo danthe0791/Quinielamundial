@@ -22,6 +22,8 @@ def calculate_bet_points(match: Match, bet: Bet) -> dict:
         "points_cards": 0,
         "points_corners": 0,
         "points_both_score": 0,
+        "points_advances": 0,
+        "points_penalties": 0,
         "points_total": 0,
     }
 
@@ -74,10 +76,22 @@ def calculate_bet_points(match: Match, bet: Bet) -> dict:
         if bet.both_score == actual_both:
             result["points_both_score"] = 1
 
+    # --- ADVANCES (¿Quién avanza?) - only for KO stage ---
+    if bet.advances_home is not None:
+        actual_advances = (match.home_score > match.away_score)  # True = home advances
+        if bet.advances_home == actual_advances:
+            result["points_advances"] = 1
+
+    # --- PENALTIES (¿Habrá penales?) - only for KO stage ---
+    if bet.penalties_yes is not None and match.had_penalties is not None:
+        if bet.penalties_yes == match.had_penalties:
+            result["points_penalties"] = 1
+
     result["points_total"] = (
         result["points_result"] + result["points_score"] +
         result["points_cards"] + result["points_corners"] +
-        result["points_both_score"]
+        result["points_both_score"] + result["points_advances"] +
+        result["points_penalties"]
     )
     return result
 
@@ -108,6 +122,8 @@ def recalculate_all_bets(db: Session, force_today: bool = False):
             bet.points_cards = pts["points_cards"]
             bet.points_corners = pts["points_corners"]
             bet.points_both_score = pts["points_both_score"]
+            bet.points_advances = pts["points_advances"]
+            bet.points_penalties = pts["points_penalties"]
             bet.points_total = new_total
 
     db.commit()
@@ -132,7 +148,8 @@ def get_user_standings(db: Session, scored_on: Optional[date] = None) -> list[di
         total_points = sum(
             (bet.points_result or 0) + (bet.points_score or 0) +
             (bet.points_cards or 0) + (bet.points_corners or 0) +
-            (bet.points_both_score or 0)
+            (bet.points_both_score or 0) + (bet.points_advances or 0) +
+            (bet.points_penalties or 0)
             for bet in bets if bet.match.is_finished
         )
 
@@ -141,6 +158,8 @@ def get_user_standings(db: Session, scored_on: Optional[date] = None) -> list[di
         correct_cards = sum(1 for bet in bets if bet.points_cards > 0 and bet.match.is_finished)
         correct_corners = sum(1 for bet in bets if bet.points_corners > 0 and bet.match.is_finished)
         correct_both = sum(1 for bet in bets if bet.points_both_score > 0 and bet.match.is_finished)
+        correct_advances = sum(1 for bet in bets if bet.points_advances > 0 and bet.match.is_finished)
+        correct_penalties = sum(1 for bet in bets if bet.points_penalties > 0 and bet.match.is_finished)
         total_bets = sum(1 for bet in bets if bet.match.is_finished)
 
         standings.append({
@@ -152,6 +171,8 @@ def get_user_standings(db: Session, scored_on: Optional[date] = None) -> list[di
             "correct_cards": correct_cards,
             "correct_corners": correct_corners,
             "correct_both": correct_both,
+            "correct_advances": correct_advances,
+            "correct_penalties": correct_penalties,
             "total_bets": total_bets,
         })
 
@@ -179,10 +200,13 @@ def get_user_stats(db: Session, user_id: int) -> dict:
     cards_correct = sum(1 for b in bets if b.points_cards > 0)
     corners_correct = sum(1 for b in bets if b.points_corners > 0)
     both_correct = sum(1 for b in bets if b.points_both_score > 0)
+    advances_correct = sum(1 for b in bets if b.points_advances > 0)
+    penalties_correct = sum(1 for b in bets if b.points_penalties > 0)
     total_points = sum(
         (b.points_result or 0) + (b.points_score or 0) +
         (b.points_cards or 0) + (b.points_corners or 0) +
-        (b.points_both_score or 0)
+        (b.points_both_score or 0) + (b.points_advances or 0) +
+        (b.points_penalties or 0)
         for b in bets
     )
 
@@ -193,6 +217,8 @@ def get_user_stats(db: Session, user_id: int) -> dict:
         "cards_correct": cards_correct,
         "corners_correct": corners_correct,
         "both_correct": both_correct,
+        "advances_correct": advances_correct,
+        "penalties_correct": penalties_correct,
         "total_points": total_points,
         "accuracy": round((correct_results / total * 100), 1) if total > 0 else 0,
     }

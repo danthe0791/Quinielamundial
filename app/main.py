@@ -221,12 +221,13 @@ def hall_of_fame(request: Request, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    # Get 8-point bets + Malas69's specific 7-point achievement (Rep. Checa vs Sudáfrica)
+    # Get 8-point bets from GROUP STAGE only + Malas69's specific 7-point achievement
     perfect_bets = db.query(Bet, Match, User).join(Match).join(User, Bet.user_id == User.id).filter(
         Match.is_finished == True,
+        Match.stage == "Grupos",
         or_(
             Bet.points_total >= 8,
-            Bet.id == 194  # Only this specific 7pt bet from Malas69
+            Bet.id == 194
         )
     ).order_by(Bet.points_total.desc(), Match.match_date_utc.desc()).all()
 
@@ -258,6 +259,25 @@ def stage_history_page(request: Request, db: Session = Depends(get_db)):
 
     return templates.TemplateResponse("stage_history.html", {
         "request": request, "user": user, "stages": stages_data,
+    })
+
+
+# ─── Grandes Ligas (Knockout Hall of Fame) ──────────────
+@app.get("/grandes-ligas", response_class=HTMLResponse)
+def grandes_ligas(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    # Get 10-point bets from knockout stage
+    perfect_bets = db.query(Bet, Match, User).join(Match).join(User, Bet.user_id == User.id).filter(
+        Match.is_finished == True,
+        Match.stage != "Grupos",
+        Bet.points_total >= 10
+    ).order_by(Bet.points_total.desc(), Match.match_date_utc.desc()).all()
+
+    return templates.TemplateResponse("grandes_ligas.html", {
+        "request": request, "user": user, "perfect_bets": perfect_bets,
     })
 
 
@@ -328,6 +348,8 @@ def place_bet(
     cards_over: Optional[str] = Form(None),
     corners_over: Optional[str] = Form(None),
     both_score: Optional[str] = Form(None),
+    advances_home: Optional[str] = Form(None),
+    penalties_yes: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
@@ -367,6 +389,8 @@ def place_bet(
         existing_bet.cards_over = parse_bool(cards_over)
         existing_bet.corners_over = parse_bool(corners_over)
         existing_bet.both_score = parse_bool(both_score)
+        existing_bet.advances_home = parse_bool(advances_home)
+        existing_bet.penalties_yes = parse_bool(penalties_yes)
         existing_bet.updated_at = datetime.utcnow()
     else:
         bet = Bet(
@@ -374,6 +398,8 @@ def place_bet(
             home_score_pred=home_score, away_score_pred=away_score,
             cards_over=parse_bool(cards_over), corners_over=parse_bool(corners_over),
             both_score=parse_bool(both_score),
+            advances_home=parse_bool(advances_home),
+            penalties_yes=parse_bool(penalties_yes),
         )
         db.add(bet)
 
@@ -401,6 +427,8 @@ def match_bets_api(match_id: int, request: Request, db: Session = Depends(get_db
                 "cards": "Over" if bet.cards_over is True else ("Under" if bet.cards_over is False else "-"),
                 "corners": "Over" if bet.corners_over is True else ("Under" if bet.corners_over is False else "-"),
                 "both": "Sí" if bet.both_score is True else ("No" if bet.both_score is False else "-"),
+                "advances": "Local" if bet.advances_home is True else ("Visita" if bet.advances_home is False else "-"),
+                "penalties": "Sí" if bet.penalties_yes is True else ("No" if bet.penalties_yes is False else "-"),
                 "points": bet.points_total,
             })
         else:
@@ -589,6 +617,7 @@ def admin_update_match(
     cards_line: str = Form(""),
     corners_line: str = Form(""),
     is_finished: str = Form(""),
+    had_penalties: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
@@ -635,6 +664,7 @@ def admin_update_match(
     if crl is not None: match.corners_line = crl
 
     match.is_finished = (is_finished.strip().lower() == "true")
+    match.had_penalties = (had_penalties.strip().lower() == "true") if had_penalties.strip() else None
     match.last_updated = datetime.utcnow()
     db.commit()
 

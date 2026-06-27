@@ -44,6 +44,7 @@ class Match(Base):
     corners_line = Column(Float, default=7.5)      # Línea Over/Under corners totales
     is_friendly = Column(Boolean, default=False)   # Partido amistoso (pruebas, no puntúa)
     is_finished = Column(Boolean, default=False)
+    had_penalties = Column(Boolean, nullable=True) # ¿Hubo penales? (fase KO)
     last_updated = Column(DateTime)
 
     bets = relationship("Bet", back_populates="match", cascade="all, delete-orphan")
@@ -60,11 +61,15 @@ class Bet(Base):
     cards_over = Column(Boolean, nullable=True)    # True=Over, False=Under
     corners_over = Column(Boolean, nullable=True)  # True=Over, False=Under
     both_score = Column(Boolean, nullable=True)    # True=Sí, False=No (ambos anotan)
+    advances_home = Column(Boolean, nullable=True) # True=Local avanza, False=Visita avanza (fase KO)
+    penalties_yes = Column(Boolean, nullable=True) # True=Sí habrá penales, False=No (fase KO)
     points_result = Column(Integer, default=0)
     points_score = Column(Integer, default=0)
     points_cards = Column(Integer, default=0)
     points_corners = Column(Integer, default=0)
     points_both_score = Column(Integer, default=0)
+    points_advances = Column(Integer, default=0)
+    points_penalties = Column(Integer, default=0)
     points_total = Column(Integer, default=0)
     scored_on = Column(Date, nullable=True)     # Date when points were awarded
     created_at = Column(DateTime, default=datetime.utcnow)
