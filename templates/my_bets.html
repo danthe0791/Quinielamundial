@@ -62,9 +62,9 @@
                     <th>Fecha</th>
                     <th>Tu Marcador</th>
                     <th>⚽ Ambos</th>
+                    {% if is_ko %}<th>🏆 Avanza</th><th>🥅 Penales</th>{% endif %}
                     <th>🟨 Tarjetas</th>
                     <th>🚩 Corners</th>
-                    {% if is_ko %}<th>🏆 Avanza</th><th>🥅 Penales</th>{% endif %}
                     <th>Resultado</th>
                     <th>Puntos</th>
                 </tr>
@@ -117,6 +117,16 @@
                         <span class="ou-none">—</span>
                         {% endif %}
                     </td>
+                    {% if is_ko %}
+                    <td class="bet-ou-cell">
+                        {% if bet.advances_home is not none %}<span class="ou-pred {{ 'ou-over-pred' if bet.advances_home else 'ou-under-pred' }}">{{ 'Local' if bet.advances_home else 'Visita' }}</span>
+                        {% else %}<span class="ou-none">—</span>{% endif %}
+                    </td>
+                    <td class="bet-ou-cell">
+                        {% if bet.penalties_yes is not none %}<span class="ou-pred {{ 'ou-over-pred' if bet.penalties_yes else 'ou-under-pred' }}">{{ 'Sí' if bet.penalties_yes else 'No' }}</span>
+                        {% else %}<span class="ou-none">—</span>{% endif %}
+                    </td>
+                    {% endif %}
                     <td class="bet-ou-cell">
                         {% if bet.cards_over is not none %}
                         <span class="ou-pred {{ 'ou-over-pred' if bet.cards_over else 'ou-under-pred' }}">
@@ -136,24 +146,6 @@
                         <span class="ou-none">—</span>
                         {% endif %}
                         <span class="ou-line">({{ bet.match.corners_line or 7.5 }})</span>
-                    </td>
-                    <td class="bet-ou-cell">
-                        {% if bet.advances_home is not none %}
-                        <span class="ou-pred {{ 'ou-over-pred' if bet.advances_home else 'ou-under-pred' }}">
-                            {{ 'Local' if bet.advances_home else 'Visita' }}
-                        </span>
-                        {% else %}
-                        <span class="ou-none">—</span>
-                        {% endif %}
-                    </td>
-                    <td class="bet-ou-cell">
-                        {% if bet.penalties_yes is not none %}
-                        <span class="ou-pred {{ 'ou-over-pred' if bet.penalties_yes else 'ou-under-pred' }}">
-                            {{ 'Sí' if bet.penalties_yes else 'No' }}
-                        </span>
-                        {% else %}
-                        <span class="ou-none">—</span>
-                        {% endif %}
                     </td>
                     <td class="bet-result-cell">
                         {% if bet.match.is_finished and bet.match.home_score is not none %}
