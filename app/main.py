@@ -206,11 +206,18 @@ def my_bets(request: Request, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    bets = db.query(Bet).filter(Bet.user_id == user.id).join(Match).order_by(Match.match_date_utc).all()
+    all_bets = db.query(Bet).filter(Bet.user_id == user.id).join(Match).order_by(Match.match_date_utc).all()
     user_stats = get_user_stats(db, user.id)
+    tab = request.query_params.get("tab", "actual")
+
+    # Split bets by stage
+    bets_groups = [b for b in all_bets if b.match.stage == "Grupos"]
+    bets_ko = [b for b in all_bets if b.match.stage != "Grupos"]
 
     return templates.TemplateResponse("my_bets.html", {
-        "request": request, "user": user, "bets": bets, "stats": user_stats,
+        "request": request, "user": user,
+        "bets_groups": bets_groups, "bets_ko": bets_ko,
+        "stats": user_stats, "tab": tab,
     })
 
 
