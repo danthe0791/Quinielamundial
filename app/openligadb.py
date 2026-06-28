@@ -90,16 +90,17 @@ def get_match_result(match_data: dict) -> tuple[Optional[int], Optional[int]]:
 def map_group_to_stage(group_name: str) -> str:
     """Map group name to tournament stage (Spanish)."""
     gn = (group_name or "").lower()
-    if "finale" in gn:
-        return "Final"
-    elif "halbfinale" in gn:
-        return "Semifinal"
-    elif "viertelfinale" in gn:
-        return "Cuartos"
+    # Check specific knockout rounds FIRST (before "finale" which would match everything)
+    if "sechzehntelfinale" in gn:
+        return "32avos"
     elif "achtelfinale" in gn:
         return "Octavos"
-    elif "sechzehntelfinale" in gn:
-        return "Dieciseisavos"
+    elif "viertelfinale" in gn:
+        return "Cuartos"
+    elif "halbfinale" in gn:
+        return "Semifinal"
+    elif "finale" in gn:
+        return "Final"
     elif "gruppe" in gn or "spieltag" in gn or "runde" in gn:
         return "Grupos"
     return "Grupos"
@@ -114,6 +115,7 @@ def translate_group_name(name: str) -> str:
         "Gruppenphase 1": "Fase de Grupos 1",
         "Gruppenphase 2": "Fase de Grupos 2",
         "Gruppenphase 3": "Fase de Grupos 3",
+        "Sechzehntelfinale": "32avos de Final",
         "1. Runde": "Fase 1", "2. Runde": "Fase 2", "3. Runde": "Fase 3",
         "1. Spieltag": "Jornada 1", "2. Spieltag": "Jornada 2",
         "3. Spieltag": "Jornada 3", "4. Spieltag": "Jornada 4",
