@@ -5,11 +5,65 @@
 <div class="standings-page">
     <div class="standings-header">
         <h1>📊 Tabla de Posiciones</h1>
-        <p class="standings-subtitle">Clasificación general acumulativa</p>
+        <p class="standings-subtitle">Clasificación general</p>
     </div>
 
-    <div class="standings-container">
-        {% if standings %}
+    <!-- Tabs -->
+    <div class="group-tabs" style="margin-bottom:20px">
+        <a href="/standings?tab=current" class="group-tab {% if tab == 'current' %}active{% endif %}">🔄 Fase Actual</a>
+        <a href="/standings?tab=archive" class="group-tab {% if tab == 'archive' %}active{% endif %}">📜 Fase de Grupos</a>
+    </div>
+
+    {% if tab == 'archive' %}
+        <!-- ARCHIVE: Group Stage -->
+        {% if standings_archive %}
+        <div class="standings-table-wrapper">
+            <table class="standings-table">
+                <thead>
+                    <tr>
+                        <th class="col-rank">#</th>
+                        <th class="col-name">Participante</th>
+                        <th class="col-points">Puntos</th>
+                        <th class="col-results">Aciertos</th>
+                        <th class="col-exact">Exactos</th>
+                        <th class="col-exact">Tarjetas</th>
+                        <th class="col-exact">Corners</th>
+                        <th class="col-exact">Ambos</th>
+                        <th class="col-bets">Pronósticos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in standings_archive %}
+                    <tr {% if s.rank == 1 %}style="background:#fff8e1;font-weight:700"{% endif %}>
+                        <td class="col-rank">
+                            {% if s.rank == 1 %}🥇
+                            {% elif s.rank == 2 %}🥈
+                            {% elif s.rank == 3 %}🥉
+                            {% else %}{{ s.rank }}{% endif %}
+                        </td>
+                        <td class="col-name">
+                            <span class="participant-name">{{ s.username }}</span>
+                            {% if s.user_id == user.id %}<span class="you-badge">Tú</span>{% endif %}
+                        </td>
+                        <td class="col-points"><strong>{{ s.total_points }}</strong></td>
+                        <td class="col-results">{{ s.correct_results }}</td>
+                        <td class="col-exact">{{ s.exact_scores }}</td>
+                        <td class="col-exact">{{ s.correct_cards }}</td>
+                        <td class="col-exact">{{ s.correct_corners }}</td>
+                        <td class="col-exact">{{ s.correct_both }}</td>
+                        <td class="col-bets">{{ s.total_bets }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><p>📜 Aún no se ha cerrado ninguna fase</p></div>
+        {% endif %}
+
+    {% else %}
+        <!-- CURRENT: Active Stage -->
+        {% if standings_current %}
         <div class="standings-table-wrapper">
             <table class="standings-table">
                 <thead>
@@ -28,7 +82,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for s in standings %}
+                    {% for s in standings_current %}
                     <tr class="{% if s.user_id == user.id %}current-user{% endif %}">
                         <td class="col-rank">
                             {% if s.rank == 1 %}🥇
@@ -58,22 +112,19 @@
         <div class="scoring-info">
             <h3>📋 Sistema de Puntuación</h3>
             <ul>
-                <li><strong>Resultado correcto</strong> (quién gana o empate): <span class="points-example">2 puntos</span></li>
-                <li><strong>Marcador exacto</strong>: <span class="points-example">+3 puntos adicionales</span></li>
-                <li><strong>Ambos Anotan</strong> (Sí/No): <span class="points-example">1 punto</span></li>
+                <li><strong>Resultado correcto</strong>: <span class="points-example">2 puntos</span></li>
+                <li><strong>Marcador exacto</strong>: <span class="points-example">+3 puntos</span></li>
+                <li><strong>Ambos Anotan</strong>: <span class="points-example">1 punto</span></li>
                 <li><strong>Tarjetas</strong> (Over/Under): <span class="points-example">1 punto</span></li>
                 <li><strong>Corners</strong> (Over/Under): <span class="points-example">1 punto</span></li>
-                <li>Fase de Grupos: <span class="points-example">máx 8 puntos</span></li>
-                <li class="ko-only"><strong>🏆 Quién avanza</strong> (KO): <span class="points-example">1 punto</span></li>
-                <li class="ko-only"><strong>🥅 Habrá penales</strong> (KO): <span class="points-example">1 punto</span></li>
-                <li class="ko-only">Fase KO: <span class="points-example">máx 10 puntos</span></li>
+                <li><strong>🏆 Quién avanza</strong> (KO): <span class="points-example">1 punto</span></li>
+                <li><strong>🥅 Habrá penales</strong> (KO): <span class="points-example">1 punto</span></li>
+                <li>Máximo por partido KO: <span class="points-example">10 puntos</span></li>
             </ul>
         </div>
         {% else %}
-        <div class="empty-state">
-            <p>Aún no hay participantes o partidos finalizados</p>
-        </div>
+        <div class="empty-state"><p>Aún no hay puntuaciones en esta fase</p></div>
         {% endif %}
-    </div>
+    {% endif %}
 </div>
 {% endblock %}

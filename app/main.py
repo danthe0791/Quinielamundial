@@ -494,11 +494,31 @@ def close_day(request: Request, db: Session = Depends(get_db)):
 # ─── Standings ───────────────────────────────────────────
 @app.get("/standings", response_class=HTMLResponse)
 def standings_page(request: Request, db: Session = Depends(get_db)):
+    import json
     user = get_current_user(request, db)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    standings = get_user_standings(db)
-    return templates.TemplateResponse("standings.html", {"request": request, "user": user, "standings": standings})
+    
+    # Current stage standings (non-archived bets only)
+    standings_current = get_user_standings(db)
+    
+    # Group stage history from the last closure
+    stage_history = db.query(StageHistory).order_by(StageHistory.closed_at.desc()).first()
+    standings_archive = []
+    if stage_history:
+        try:
+            standings_archive = json.loads(stage_history.standings_json)
+        except:
+            standings_archive = []
+    
+    tab = request.query_params.get("tab", "current")
+    
+    return templates.TemplateResponse("standings.html", {
+        "request": request, "user": user,
+        "standings_current": standings_current,
+        "standings_archive": standings_archive,
+        "tab": tab,
+    })
 
 
 @app.get("/group-standings", response_class=HTMLResponse)
