@@ -106,7 +106,7 @@
                         {% endif %}
                     </td>
                     <td class="bet-pred-cell">
-                        <span class="bet-pred-score">{{ bet.home_score_pred or '?' }} - {{ bet.away_score_pred or '?' }}</span>
+                        <span class="bet-pred-score">{{ bet.home_score_pred if bet.home_score_pred is not none else '0' }} - {{ bet.away_score_pred if bet.away_score_pred is not none else '0' }}</span>
                     </td>
                     <td class="bet-ou-cell">
                         {% if bet.both_score is not none %}
