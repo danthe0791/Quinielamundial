@@ -92,7 +92,7 @@ def map_group_to_stage(group_name: str) -> str:
     gn = (group_name or "").lower()
     # Check specific knockout rounds FIRST (before "finale" which would match everything)
     if "sechzehntelfinale" in gn:
-        return "32avos"
+        return "16avos"
     elif "achtelfinale" in gn:
         return "Octavos"
     elif "viertelfinale" in gn:
@@ -115,7 +115,7 @@ def translate_group_name(name: str) -> str:
         "Gruppenphase 1": "Fase de Grupos 1",
         "Gruppenphase 2": "Fase de Grupos 2",
         "Gruppenphase 3": "Fase de Grupos 3",
-        "Sechzehntelfinale": "32avos de Final",
+        "Sechzehntelfinale": "16avos de Final",
         "1. Runde": "Fase 1", "2. Runde": "Fase 2", "3. Runde": "Fase 3",
         "1. Spieltag": "Jornada 1", "2. Spieltag": "Jornada 2",
         "3. Spieltag": "Jornada 3", "4. Spieltag": "Jornada 4",
