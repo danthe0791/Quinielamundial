@@ -386,7 +386,7 @@ async function showMatchBets(matchId) {
         if (data.bets && data.bets.length > 0) {
             let html = `<p class="modal-match-title">${data.match}</p>`;
             if (data.home_score !== null) {
-                html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} | Ambos: ${(data.home_score > 0 && data.away_score > 0) ? 'Sí' : 'No'} | Tarjetas: O/U ${data.cards_line} | Corners: O/U ${data.corners_line}</p>`;}
+                html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} | Ambos: ${(data.home_score > 0 && data.away_score > 0) ? 'Sí' : 'No'} | Tarjetas: O/U ${data.cards_line} | Corners: O/U ${data.corners_line}</p>`;
             }
             if (data.is_admin) {
                 html += `<div class="bets-table-wrapper"><table class="bets-table">
