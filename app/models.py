@@ -45,6 +45,7 @@ class Match(Base):
     is_friendly = Column(Boolean, default=False)   # Partido amistoso (pruebas, no puntúa)
     is_finished = Column(Boolean, default=False)
     had_penalties = Column(Boolean, nullable=True) # ¿Hubo penales? (fase KO)
+    winner_is_home = Column(Boolean, nullable=True) # True=Local avanza, False=Visita (KO, manual si empate)
     last_updated = Column(DateTime)
 
     bets = relationship("Bet", back_populates="match", cascade="all, delete-orphan")

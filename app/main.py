@@ -618,6 +618,7 @@ def admin_update_match(
     corners_line: str = Form(""),
     is_finished: str = Form(""),
     had_penalties: str = Form(""),
+    winner_is_home: str = Form(""),
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
@@ -665,6 +666,7 @@ def admin_update_match(
 
     match.is_finished = (is_finished.strip().lower() == "true")
     match.had_penalties = (had_penalties.strip().lower() == "true") if had_penalties.strip() else None
+    match.winner_is_home = (winner_is_home.strip().lower() == "true") if winner_is_home.strip() else None
     match.last_updated = datetime.utcnow()
     db.commit()
 

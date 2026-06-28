@@ -78,7 +78,11 @@ def calculate_bet_points(match: Match, bet: Bet) -> dict:
 
     # --- ADVANCES (¿Quién avanza?) - only for KO stage ---
     if bet.advances_home is not None:
-        actual_advances = (match.home_score > match.away_score)  # True = home advances
+        # Use explicit winner if set (for penalty shootouts), else compare scores
+        if match.winner_is_home is not None:
+            actual_advances = match.winner_is_home
+        else:
+            actual_advances = (match.home_score > match.away_score)
         if bet.advances_home == actual_advances:
             result["points_advances"] = 1
 

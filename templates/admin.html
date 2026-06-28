@@ -156,6 +156,14 @@
                         <input type="checkbox" name="had_penalties" value="true" {% if m.had_penalties %}checked{% endif %}>
                         ¿Hubo penales?
                     </label>
+                    <div class="edit-field" style="margin-top:6px">
+                        <label>🏆 ¿Quién avanza?</label>
+                        <select name="winner_is_home" class="score-input" style="width:auto;padding:4px 8px">
+                            <option value="">—</option>
+                            <option value="true" {% if m.winner_is_home == True %}selected{% endif %}>Local</option>
+                            <option value="false" {% if m.winner_is_home == False %}selected{% endif %}>Visita</option>
+                        </select>
+                    </div>
                     {% endif %}
                     <button type="button" class="btn-admin" style="margin-top:8px" onclick="updateMatchStats(this)">Actualizar</button>
                 </form>
