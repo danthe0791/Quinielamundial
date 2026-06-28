@@ -750,7 +750,8 @@ def admin_close_stage(request: Request, db: Session = Depends(get_db)):
     if not user or not user.is_admin:
         return JSONResponse({"error": "No autorizado"}, status_code=401)
 
-    # Get current standings
+    # Get current standings (force recalculation first)
+    recalculate_all_bets(db)
     standings = get_user_standings(db)
     standings_json = json.dumps(standings, default=str)
 
@@ -766,17 +767,23 @@ def admin_close_stage(request: Request, db: Session = Depends(get_db)):
     ))
     db.commit()
 
-    # Reset all points
-    db.query(Bet).update({
-        Bet.points_result: 0,
-        Bet.points_score: 0,
-        Bet.points_cards: 0,
-        Bet.points_corners: 0,
-        Bet.points_both_score: 0,
-        Bet.points_total: 0,
-        Bet.scored_on: None,
-    })
+    # Reset all points using SQL UPDATE
+    from sqlalchemy import text
+    db.execute(text("""
+        UPDATE bets SET 
+            points_result = 0,
+            points_score = 0,
+            points_cards = 0,
+            points_corners = 0,
+            points_both_score = 0,
+            points_advances = 0,
+            points_penalties = 0,
+            points_total = 0,
+            scored_on = NULL
+    """))
     db.commit()
+
+    return JSONResponse({"success": True, "message": f"'{stage_name}' cerrada. Historial guardado. Puntos reiniciados a 0."})
 
     return JSONResponse({"success": True, "message": f"'{stage_name}' cerrada. Puntos reiniciados para la siguiente ronda."})
 

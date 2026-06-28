@@ -32,8 +32,10 @@
                     </thead>
                     <tbody>
                         {% for s in stage.standings %}
-                        <tr>
-                            <td class="col-rank">{{ s.rank }}</td>
+                        <tr {% if s.rank == 1 %}style="background:#fff8e1;font-weight:700"{% endif %}>
+                            <td class="col-rank">
+                                {% if s.rank == 1 %}🥇{% else %}{{ s.rank }}{% endif %}
+                            </td>
                             <td class="col-name"><span class="participant-name">{{ s.username }}</span></td>
                             <td class="col-points"><strong>{{ s.total_points }}</strong></td>
                             <td class="col-results">{{ s.correct_results }}</td>
