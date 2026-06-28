@@ -148,9 +148,9 @@ def get_user_standings(db: Session, scored_on: Optional[date] = None) -> list[di
 
     for user in users:
         if scored_on:
-            bets = [b for b in user.bets if b.scored_on == scored_on]
+            bets = [b for b in user.bets if b.scored_on == scored_on and not b.archived]
         else:
-            bets = [b for b in user.bets]
+            bets = [b for b in user.bets if not b.archived]
 
         total_points = sum(
             (bet.points_result or 0) + (bet.points_score or 0) +
@@ -198,7 +198,8 @@ def get_user_stats(db: Session, user_id: int) -> dict:
 
     bets = db.query(Bet).filter(
         Bet.user_id == user_id,
-        Bet.match.has(is_finished=True)
+        Bet.match.has(is_finished=True),
+        Bet.archived == False
     ).all()
 
     total = len(bets)
