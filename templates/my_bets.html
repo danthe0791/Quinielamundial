@@ -29,6 +29,14 @@
                 <span class="stat-label">Corners</span>
             </div>
             <div class="stat-item">
+                <span class="stat-value">{{ stats.advances_correct or 0 }}</span>
+                <span class="stat-label">Avanza</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.penalties_correct or 0 }}</span>
+                <span class="stat-label">Penales</span>
+            </div>
+            <div class="stat-item">
                 <span class="stat-value">{{ stats.both_correct or 0 }}</span>
                 <span class="stat-label">Ambos Anotan</span>
             </div>
@@ -51,6 +59,8 @@
                     <th>⚽ Ambos Anotan</th>
                     <th>🟨 Tarjetas</th>
                     <th>🚩 Corners</th>
+                    <th>🏆 Avanza</th>
+                    <th>🥅 Penales</th>
                     <th>Resultado</th>
                     <th>Puntos</th>
                 </tr>
@@ -123,6 +133,24 @@
                         {% endif %}
                         <span class="ou-line">({{ bet.match.corners_line or 7.5 }})</span>
                     </td>
+                    <td class="bet-ou-cell">
+                        {% if bet.advances_home is not none %}
+                        <span class="ou-pred {{ 'ou-over-pred' if bet.advances_home else 'ou-under-pred' }}">
+                            {{ 'Local' if bet.advances_home else 'Visita' }}
+                        </span>
+                        {% else %}
+                        <span class="ou-none">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="bet-ou-cell">
+                        {% if bet.penalties_yes is not none %}
+                        <span class="ou-pred {{ 'ou-over-pred' if bet.penalties_yes else 'ou-under-pred' }}">
+                            {{ 'Sí' if bet.penalties_yes else 'No' }}
+                        </span>
+                        {% else %}
+                        <span class="ou-none">—</span>
+                        {% endif %}
+                    </td>
                     <td class="bet-result-cell">
                         {% if bet.match.is_finished and bet.match.home_score is not none %}
                         <div class="bet-actual">
@@ -131,6 +159,11 @@
                                 <span>⚽ Ambos: {{ 'Sí' if bet.match.home_score > 0 and bet.match.away_score > 0 else 'No' }}</span>
                                 <span>🟨 {{ bet.match.home_cards or 0 }}-{{ bet.match.away_cards or 0 }}</span>
                                 <span>🚩 {{ bet.match.home_corners or 0 }}-{{ bet.match.away_corners or 0 }}</span>
+                                {% if bet.match.stage != 'Grupos' %}
+                                {% set adv = 'Local' if (bet.match.winner_is_home == True or (bet.match.winner_is_home is none and bet.match.home_score > bet.match.away_score)) else 'Visita' %}
+                                <span>🏆 Avanza: {{ adv }}</span>
+                                <span>🥅 Penales: {{ 'Sí' if bet.match.had_penalties else 'No' }}</span>
+                                {% endif %}
                             </div>
                         </div>
                         {% else %}
@@ -141,8 +174,8 @@
                         {% if bet.match.is_finished %}
                         <div class="pts-breakdown">
                             <span class="pts-total">{% if bet.points_total > 0 %}+{% endif %}{{ bet.points_total }}</span>
-                            <span class="pts-detail" title="Resultado: {{ bet.points_result }} | Exacto: {{ bet.points_score }} | Ambos: {{ bet.points_both_score }} | Tarjetas: {{ bet.points_cards }} | Corners: {{ bet.points_corners }}">
-                                M:{{ bet.points_result }}+E:{{ bet.points_score }} A:{{ bet.points_both_score }} T:{{ bet.points_cards }} C:{{ bet.points_corners }}
+                            <span class="pts-detail" title="Resultado: {{ bet.points_result }} | Exacto: {{ bet.points_score }} | Ambos: {{ bet.points_both_score }} | Avanza: {{ bet.points_advances }} | Penales: {{ bet.points_penalties }} | Tarjetas: {{ bet.points_cards }} | Corners: {{ bet.points_corners }}">
+                                M:{{ bet.points_result }}+E:{{ bet.points_score }} A:{{ bet.points_both_score }} Av:{{ bet.points_advances }} P:{{ bet.points_penalties }} T:{{ bet.points_cards }} C:{{ bet.points_corners }}
                             </span>
                         </div>
                         {% else %}
