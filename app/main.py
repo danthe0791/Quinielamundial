@@ -769,10 +769,12 @@ def admin_close_stage(request: Request, db: Session = Depends(get_db)):
     ))
     db.commit()
 
-    # Reset all points using SQL UPDATE
+    # Archive all existing bets (won't be recalculated anymore)
+    # Also reset points to 0 for fresh start
     from sqlalchemy import text
     db.execute(text("""
         UPDATE bets SET 
+            archived = 1,
             points_result = 0,
             points_score = 0,
             points_cards = 0,

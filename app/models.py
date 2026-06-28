@@ -72,6 +72,7 @@ class Bet(Base):
     points_advances = Column(Integer, default=0)
     points_penalties = Column(Integer, default=0)
     points_total = Column(Integer, default=0)
+    archived = Column(Boolean, default=False)     # Archived bets won't be recalculated
     scored_on = Column(Date, nullable=True)     # Date when points were awarded
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

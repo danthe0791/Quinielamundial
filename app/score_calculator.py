@@ -108,7 +108,10 @@ def recalculate_all_bets(db: Session, force_today: bool = False):
     ).all()
 
     match_ids = [m.id for m in finished_matches]
-    bets = db.query(Bet).filter(Bet.match_id.in_(match_ids)).all()
+    bets = db.query(Bet).filter(
+        Bet.match_id.in_(match_ids),
+        Bet.archived == False  # Skip archived (closed stage) bets
+    ).all()
 
     for bet in bets:
         match = next((m for m in finished_matches if m.id == bet.match_id), None)
