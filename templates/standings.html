@@ -22,6 +22,8 @@
                         <th class="col-exact">Tarjetas</th>
                         <th class="col-exact">Corners</th>
                         <th class="col-exact">Ambos</th>
+                        <th class="col-exact">Avanza</th>
+                        <th class="col-exact">Penales</th>
                         <th class="col-bets">Pronósticos</th>
                     </tr>
                 </thead>
@@ -44,6 +46,8 @@
                         <td class="col-exact">{{ s.correct_cards }}</td>
                         <td class="col-exact">{{ s.correct_corners }}</td>
                         <td class="col-exact">{{ s.correct_both }}</td>
+                        <td class="col-exact">{{ s.correct_advances }}</td>
+                        <td class="col-exact">{{ s.correct_penalties }}</td>
                         <td class="col-bets">{{ s.total_bets }}</td>
                     </tr>
                     {% endfor %}
@@ -56,9 +60,13 @@
             <ul>
                 <li><strong>Resultado correcto</strong> (quién gana o empate): <span class="points-example">2 puntos</span></li>
                 <li><strong>Marcador exacto</strong>: <span class="points-example">+3 puntos adicionales</span></li>
+                <li><strong>Ambos Anotan</strong> (Sí/No): <span class="points-example">1 punto</span></li>
                 <li><strong>Tarjetas</strong> (Over/Under): <span class="points-example">1 punto</span></li>
                 <li><strong>Corners</strong> (Over/Under): <span class="points-example">1 punto</span></li>
-                <li>Total posible por partido: <span class="points-example">hasta 7 puntos</span></li>
+                <li>Fase de Grupos: <span class="points-example">máx 8 puntos</span></li>
+                <li class="ko-only"><strong>🏆 Quién avanza</strong> (KO): <span class="points-example">1 punto</span></li>
+                <li class="ko-only"><strong>🥅 Habrá penales</strong> (KO): <span class="points-example">1 punto</span></li>
+                <li class="ko-only">Fase KO: <span class="points-example">máx 10 puntos</span></li>
             </ul>
         </div>
         {% else %}
