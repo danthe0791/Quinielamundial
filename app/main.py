@@ -696,7 +696,7 @@ def admin_update_match(
     if crl is not None: match.corners_line = crl
 
     match.is_finished = (is_finished.strip().lower() == "true")
-    match.had_penalties = (had_penalties.strip().lower() == "true") if had_penalties.strip() else None
+    match.had_penalties = (had_penalties.strip().lower() == "true") if had_penalties.strip() else (False if match.stage != "Grupos" else None)
     match.winner_is_home = (winner_is_home.strip().lower() == "true") if winner_is_home.strip() else None
     match.last_updated = datetime.utcnow()
     db.commit()
