@@ -386,7 +386,7 @@ def place_bet(
     def parse_bool(v):
         if v is None or v == "":
             return None
-        return v.lower() in ("true", "1", "over", "si")
+        return v.lower() in ("true", "1", "over", "si", "local")
 
     existing_bet = db.query(Bet).filter(Bet.user_id == user.id, Bet.match_id == match_id).first()
 
@@ -423,10 +423,14 @@ def match_bets_api(match_id: int, request: Request, db: Session = Depends(get_db
         return JSONResponse({"error": "No encontrado"}, status_code=404)
 
     bets = db.query(Bet, User).join(User).filter(Bet.match_id == match_id).all()
+    
+    # Show full details if: admin OR match has started
+    match_started = match.match_date_utc and datetime.utcnow() >= match.match_date_utc
+    show_details = (user and user.is_admin) or match_started
+    
     data = []
     for bet, usr in bets:
-        if user and user.is_admin:
-            # Admin sees full details
+        if show_details:
             data.append({
                 "user": usr.display_name,
                 "home_score": bet.home_score_pred,

@@ -388,7 +388,9 @@ async function showMatchBets(matchId) {
             if (data.home_score !== null) {
                 html += `<p class="modal-actual-score">Resultado: ${data.home_score}-${data.away_score} | Ambos: ${(data.home_score > 0 && data.away_score > 0) ? 'Sí' : 'No'} | Tarjetas: O/U ${data.cards_line} | Corners: O/U ${data.corners_line}</p>`;
             }
-            if (data.is_admin) {
+            // Show table if bets have details (admin or match started)
+            var hasDetails = data.bets.length > 0 && data.bets[0].home_score !== undefined;
+            if (hasDetails) {
                 html += `<div class="bets-table-wrapper"><table class="bets-table">
                     <thead><tr>
                         <th>Participante</th>
@@ -412,6 +414,7 @@ async function showMatchBets(matchId) {
                         <td>${b.points || 0}</td>
                     </tr>`;
                 });
+                html += `</tbody></table></div>`;
             } else {
                 html += `<div class="bets-list"><strong>Quiénes apostaron:</strong><br>`;
                 data.bets.forEach(b => {
@@ -419,7 +422,6 @@ async function showMatchBets(matchId) {
                 });
                 html += `</div>`;
             }
-            html += `</tbody></table></div>`;
             content.innerHTML = html;
         } else {
             content.innerHTML = '<p class="empty-state">No hay apuestas para este partido</p>';
