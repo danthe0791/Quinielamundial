@@ -196,7 +196,7 @@
         <form id="betForm" onsubmit="return false;">
             <input type="hidden" id="modalMatchId">
             <div class="modal-section">
-                <h3>⚽ Marcador</h3>
+                <h3>⚽ Marcador <span class="line-info">(90 minutos)</span></h3>
                 <div class="modal-inputs">
                     <div class="modal-team-input">
                         <label id="modalHomeLabel">Local</label>
@@ -210,7 +210,7 @@
                 </div>
             </div>
             <div class="modal-section">
-                <h3>🟨 Tarjetas - Over/Under <span class="line-info" id="cardsLineInfo">(línea: 3.5)</span></h3>
+                <h3>🟨 Tarjetas - Over/Under <span class="line-info" id="cardsLineInfo">(90 min, línea: 3.5)</span></h3>
                 <div class="ou-selector" id="cardsSelector">
                     <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('cards', true)">Over</button>
                     <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('cards', false)">Under</button>
@@ -218,7 +218,7 @@
                 <input type="hidden" id="modalCardsOver" value="">
             </div>
             <div class="modal-section">
-                <h3>🚩 Corners - Over/Under <span class="line-info" id="cornersLineInfo">(línea: 7.5)</span></h3>
+                <h3>🚩 Corners - Over/Under <span class="line-info" id="cornersLineInfo">(90 min, línea: 7.5)</span></h3>
                 <div class="ou-selector" id="cornersSelector">
                     <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('corners', true)">Over</button>
                     <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('corners', false)">Under</button>
@@ -226,14 +226,17 @@
                 <input type="hidden" id="modalCornersOver" value="">
             </div>
             <div class="modal-section" id="bothSection">
-                <h3>⚽ Ambos Anotan <span class="line-info">(los 2 equipos marcan gol)</span></h3>
+                <h3>⚽ Ambos Anotan <span class="line-info">(90 minutos)</span></h3>
                 <div class="ou-selector" id="bothSelector">
                     <button type="button" class="ou-btn ou-over" data-value="true" onclick="selectOU('both', true)">Sí</button>
                     <button type="button" class="ou-btn ou-under" data-value="false" onclick="selectOU('both', false)">No</button>
                 </div>
                 <input type="hidden" id="modalBothScore" value="">
             </div>
-            <!-- KO Stage only: Quién avanza + Penales -->
+            <!-- KO Stage only: Tiempo Extra / Penales -->
+            <div class="modal-section" id="koDivider" style="display:none;border-top:2px solid var(--accent);padding-top:16px;margin-top:4px">
+                <p style="text-align:center;color:#b8860b;font-weight:700;font-size:0.85rem;margin-bottom:12px">⚡ Tiempo Extra / Penales</p>
+            </div>
             <div class="modal-section" id="koSection1" style="display:none">
                 <h3>🏆 ¿Quién avanza?</h3>
                 <div class="ou-selector" id="advancesSelector">
@@ -299,6 +302,7 @@ function openBetModal(button) {
     var isKO = matchStage !== 'Grupos' && matchStage !== 'Amistosos';
     document.getElementById('koSection1').style.display = isKO ? '' : 'none';
     document.getElementById('koSection2').style.display = isKO ? '' : 'none';
+    document.getElementById('koDivider').style.display = isKO ? '' : 'none';
 
     // Auto-detectar "Ambos Anotan" según los goles
     autoDetectBoth();

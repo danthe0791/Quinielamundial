@@ -185,10 +185,15 @@ async def sync_matches_from_api(db: Session) -> int:
         }
 
         if existing:
-            # Update scores if match finished
+            # Update scores if match finished, but DON'T overwrite admin-set scores
             if is_finished and not existing.is_finished:
-                for key, value in match_data.items():
-                    setattr(existing, key, value)
+                # Only auto-fill scores if admin hasn't set them yet
+                if existing.home_score is None:
+                    existing.home_score = home_score
+                if existing.away_score is None:
+                    existing.away_score = away_score
+                existing.is_finished = is_finished
+                existing.last_updated = datetime.utcnow()
             elif not is_finished:
                 # Update metadata AND dates (important for rescheduled matches)
                 existing.match_date = match_date
