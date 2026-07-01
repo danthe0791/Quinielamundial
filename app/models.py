@@ -13,6 +13,7 @@ class User(Base):
     password_hash = Column(String(200), nullable=False)
     display_name = Column(String(100), nullable=False)
     is_admin = Column(Boolean, default=False)
+    hidden = Column(Boolean, default=False)      # Participa pero no sale en la tabla
     created_at = Column(DateTime, default=datetime.utcnow)
 
     bets = relationship("Bet", back_populates="user", cascade="all, delete-orphan")

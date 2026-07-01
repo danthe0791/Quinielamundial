@@ -143,7 +143,7 @@ def get_user_standings(db: Session, scored_on: Optional[date] = None) -> list[di
     """
     recalculate_all_bets(db)
 
-    users = db.query(User).order_by(User.id).all()
+    users = db.query(User).filter(User.hidden == False).order_by(User.id).all()
     standings = []
 
     for user in users:
