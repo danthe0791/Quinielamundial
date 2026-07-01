@@ -120,6 +120,12 @@
                         {% endif %}
                     </div>
                     {% endif %}
+                    <!-- Show ET score if different from 90-min score -->
+                    {% if match.et_home_score is not none and match.et_away_score is not none and (match.et_home_score != match.home_score or match.et_away_score != match.away_score) %}
+                    <div class="extra-stats" style="margin-top:2px">
+                        <span class="extra-stat" style="background:#fff8e1;color:#b8860b;font-weight:600">⚡ Final: {{ match.et_home_score }}-{{ match.et_away_score }}</span>
+                    </div>
+                    {% endif %}
                     {% else %}
                     <div class="extra-stats">
                         <span class="extra-stat">🟨 O/U {{ match.cards_line or 3.5 }}</span>

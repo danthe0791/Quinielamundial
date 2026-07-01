@@ -641,6 +641,8 @@ def admin_update_match(
     request: Request, match_id: int = Form(...),
     home_score: str = Form(""),
     away_score: str = Form(""),
+    et_home_score: str = Form(""),
+    et_away_score: str = Form(""),
     home_cards: str = Form(""),
     away_cards: str = Form(""),
     home_corners: str = Form(""),
@@ -685,6 +687,10 @@ def admin_update_match(
 
     if hs is not None: match.home_score = hs
     if aws is not None: match.away_score = aws
+    eth = to_int(et_home_score)
+    eta = to_int(et_away_score)
+    if eth is not None: match.et_home_score = eth
+    if eta is not None: match.et_away_score = eta
     if hc is not None: match.home_cards = hc
     if awc is not None: match.away_cards = awc
     if hco is not None: match.home_corners = hco

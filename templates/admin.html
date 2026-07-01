@@ -115,13 +115,23 @@
                     <input type="hidden" name="match_id" value="{{ m.id }}">
                     <div class="match-edit-row">
                         <div class="edit-field">
-                            <label>Marcador</label>
+                            <label>Marcador (90 min)</label>
                             <div class="edit-inputs">
                                 <input type="number" name="home_score" class="score-input" value="{{ m.home_score if m.home_score is not none else '' }}" placeholder="L" min="0">
                                 <span>-</span>
                                 <input type="number" name="away_score" class="score-input" value="{{ m.away_score if m.away_score is not none else '' }}" placeholder="V" min="0">
                             </div>
                         </div>
+                        {% if m.stage != 'Grupos' %}
+                        <div class="edit-field">
+                            <label>⚡ Marcador Final (con TE)</label>
+                            <div class="edit-inputs">
+                                <input type="number" name="et_home_score" class="score-input" value="{{ m.et_home_score if m.et_home_score is not none else '' }}" placeholder="L" min="0" style="background:#fff8e1">
+                                <span>-</span>
+                                <input type="number" name="et_away_score" class="score-input" value="{{ m.et_away_score if m.et_away_score is not none else '' }}" placeholder="V" min="0" style="background:#fff8e1">
+                            </div>
+                        </div>
+                        {% endif %}
                         <div class="edit-field">
                             <label>🟨 Tarjetas (real)</label>
                             <div class="edit-inputs">

@@ -37,6 +37,8 @@ class Match(Base):
     stage = Column(String(50), default="Grupos")
     home_score = Column(Integer, nullable=True)
     away_score = Column(Integer, nullable=True)
+    et_home_score = Column(Integer, nullable=True)   # Marcador final con tiempo extra (informativo)
+    et_away_score = Column(Integer, nullable=True)
     home_cards = Column(Integer, nullable=True)   # Tarjetas local (real)
     away_cards = Column(Integer, nullable=True)   # Tarjetas visitante (real)
     home_corners = Column(Integer, nullable=True)  # Corners local (real)
